@@ -518,7 +518,7 @@ textarea:hover {
 
 .budget-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 14px;
 }
 
@@ -813,10 +813,6 @@ tbody tr:last-child td {
     overflow-wrap: normal;
     word-break: normal;
     font-size: 0.96rem;
-  }
-
-  .budget-list {
-    grid-template-columns: 1fr;
   }
 
   .chart-wrap,
