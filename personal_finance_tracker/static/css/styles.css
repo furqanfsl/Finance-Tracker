@@ -331,7 +331,6 @@ textarea:focus-visible {
 
 .dashboard-grid {
   display: grid;
-  align-items: start;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 18px;
   padding-bottom: 56px;
@@ -489,14 +488,24 @@ textarea:hover {
   line-height: 1.35;
 }
 
+.chart-panel {
+  display: flex;
+  flex-direction: column;
+}
+
 .chart-wrap {
   position: relative;
+  flex: 1 1 auto;
   min-height: 330px;
+}
+
+.wide-panel.chart-panel .chart-wrap {
+  min-height: 520px;
 }
 
 .chart-wrap canvas {
   width: 100% !important;
-  height: 330px !important;
+  height: 100% !important;
 }
 
 .chart-wrap-small {
