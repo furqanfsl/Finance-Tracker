@@ -1,14 +1,28 @@
-﻿# Personal Finance Tracker
+# Personal Finance Tracker
 
 A portfolio-ready Flask app for logging income and expenses, reviewing cashflow, and visualizing category trends with Chart.js.
 
-## Planned features
+## What it demonstrates
 
-- Transaction logging for income and expenses
-- SQLite persistence through Flask-SQLAlchemy
-- REST API endpoints for dashboard data
-- Responsive dashboard with summary cards and charts
-- Tests for core API behavior
+- Flask application factory pattern
+- SQLite persistence with Flask-SQLAlchemy
+- REST API endpoints for CRUD-style data handling
+- Integer-cent money storage to avoid floating-point rounding errors
+- Responsive HTML/CSS dashboard with accessible forms and tables
+- Chart.js visualizations for monthly cashflow and category spend
+- Pytest coverage for API and service behavior
+
+## Features
+
+- Add income and expense transactions
+- Filter transactions by type and date range
+- Delete transactions from the ledger
+- View totals for income, expenses, net cashflow, and savings rate
+- Compare monthly income, expenses, and net cashflow
+- Review expense category breakdowns
+- Track starter monthly budgets
+- Export the current ledger view to CSV
+- Seeded sample data for an immediate dashboard demo
 
 ## Quick start
 
@@ -18,3 +32,51 @@ uv run flask --app run.py run --debug
 ```
 
 Then open <http://127.0.0.1:5000>.
+
+## Tests
+
+```powershell
+uv run pytest
+```
+
+## Environment variables
+
+Copy `.env.example` to `.env` if you want to customize local settings.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `SECRET_KEY` | `dev` | Flask secret key for local development |
+| `DATABASE_URL` | `sqlite:///instance/finance_tracker.sqlite3` | Database connection string |
+| `CURRENCY_CODE` | `USD` | Currency used by the dashboard formatter |
+| `AUTO_CREATE_DB` | `true` | Create tables automatically on app startup |
+| `SEED_SAMPLE_DATA` | `true` | Add demo records when the database is empty |
+
+## API overview
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/health` | Health check |
+| `GET` | `/api/summary` | Dashboard totals, chart series, categories, and budgets |
+| `GET` | `/api/transactions` | List transactions with optional `kind`, `start`, and `end` filters |
+| `POST` | `/api/transactions` | Create an income or expense transaction |
+| `DELETE` | `/api/transactions/<id>` | Delete a transaction |
+| `GET` | `/api/categories` | List category suggestions |
+| `GET` | `/api/budgets` | List budgets |
+| `POST` | `/api/budgets` | Create or update a monthly category budget |
+| `DELETE` | `/api/budgets/<id>` | Delete a budget |
+
+## Project structure
+
+```text
+personal_finance_tracker/
+  __init__.py          Flask factory and CLI commands
+  config.py            Environment-driven config
+  models.py            SQLAlchemy models
+  routes.py            UI and API routes
+  seed.py              Portfolio sample data
+  services.py          Validation and aggregation logic
+  static/              CSS and dashboard JavaScript
+  templates/           Jinja templates
+tests/                 Pytest suite
+docs/                  Extra project notes
+```

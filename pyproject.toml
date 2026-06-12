@@ -1,4 +1,4 @@
-﻿[project]
+[project]
 name = "personal-finance-tracker"
 version = "0.1.0"
 description = "A Flask dashboard for tracking income, expenses, savings, and category trends."
@@ -17,6 +17,7 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 addopts = "-q"
 
 [tool.ruff]

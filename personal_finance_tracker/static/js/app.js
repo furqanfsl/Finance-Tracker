@@ -1,4 +1,4 @@
-﻿const config = window.FINANCE_TRACKER || {};
+const config = window.FINANCE_TRACKER || {};
 const currencyCode = config.currency || "USD";
 
 const state = {
