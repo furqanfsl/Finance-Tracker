@@ -733,7 +733,8 @@ tbody tr:last-child td {
 
 @media (max-width: 680px) {
   .shell {
-    width: min(100% - 24px, 1180px);
+    width: calc(100vw - 24px);
+    max-width: 1180px;
   }
 
   .app-header {
@@ -777,8 +778,14 @@ tbody tr:last-child td {
     font-size: clamp(2.35rem, 13vw, 3.8rem);
   }
 
+  .intro-copy,
+  .intro-copy h2,
+  .intro-copy p:last-child {
+    width: 100%;
+    max-width: calc(100vw - 24px);
+  }
+
   .intro-copy h2 {
-    max-width: 100%;
     font-size: 1.38rem;
     line-height: 1.18;
     letter-spacing: -0.025em;
