@@ -115,6 +115,13 @@ button:disabled {
   justify-content: space-between;
 }
 
+.header-inner > *,
+.intro-grid > *,
+.metrics-grid > *,
+.dashboard-grid > * {
+  min-width: 0;
+}
+
 .header-actions {
   align-items: center;
   flex-wrap: wrap;
@@ -768,6 +775,17 @@ tbody tr:last-child td {
 
   h1 {
     font-size: clamp(2.35rem, 13vw, 3.8rem);
+  }
+
+  .intro-copy h2 {
+    max-width: 100%;
+    font-size: 1.38rem;
+    line-height: 1.18;
+    letter-spacing: -0.025em;
+  }
+
+  .intro-copy p:last-child {
+    font-size: 1rem;
   }
 
   .chart-wrap,
