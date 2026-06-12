@@ -1,0 +1,23 @@
+﻿[project]
+name = "personal-finance-tracker"
+version = "0.1.0"
+description = "A Flask dashboard for tracking income, expenses, savings, and category trends."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "Flask>=3.0.0",
+    "Flask-SQLAlchemy>=3.1.1",
+    "python-dotenv>=1.0.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.2.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
