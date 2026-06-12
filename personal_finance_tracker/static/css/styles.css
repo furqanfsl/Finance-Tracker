@@ -331,6 +331,7 @@ textarea:focus-visible {
 
 .dashboard-grid {
   display: grid;
+  align-items: start;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 18px;
   padding-bottom: 56px;
