@@ -65,6 +65,10 @@ Copy `.env.example` to `.env` if you want to customize local settings.
 | `POST` | `/api/budgets` | Create or update a monthly category budget |
 | `DELETE` | `/api/budgets/<id>` | Delete a budget |
 
+## Publishing
+
+See `docs/PUBLISHING.md` for the GitHub publish helper.
+
 ## Project structure
 
 ```text
