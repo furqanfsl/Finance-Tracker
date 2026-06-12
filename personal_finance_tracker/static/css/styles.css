@@ -783,14 +783,14 @@ tbody tr:last-child td {
   .intro-copy h2,
   .intro-copy p:last-child {
     width: 100%;
-    max-width: calc(100vw - 24px);
+    max-width: calc(100vw - 56px);
   }
 
   .intro-copy h2 {
     overflow-wrap: normal;
     word-break: normal;
     text-wrap: pretty;
-    font-size: 1.32rem;
+    font-size: 1.2rem;
     line-height: 1.18;
     letter-spacing: -0.025em;
   }
@@ -798,7 +798,7 @@ tbody tr:last-child td {
   .intro-copy p:last-child {
     overflow-wrap: normal;
     word-break: normal;
-    font-size: 0.98rem;
+    font-size: 0.96rem;
   }
 
   .chart-wrap,
