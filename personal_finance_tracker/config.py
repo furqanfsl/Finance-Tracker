@@ -11,6 +11,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     AUTO_CREATE_DB = os.getenv("AUTO_CREATE_DB", "true").lower() == "true"
     SEED_SAMPLE_DATA = os.getenv("SEED_SAMPLE_DATA", "true").lower() == "true"
+    CURRENCY_CODE = os.getenv("CURRENCY_CODE", "USD").upper()
 
     @staticmethod
     def database_uri(app_instance_path: str) -> str:

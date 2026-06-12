@@ -1,8 +1,207 @@
 ﻿{% extends "base.html" %}
+
 {% block content %}
-<section class="shell hero-shell" aria-labelledby="page-title">
-  <p class="eyebrow">Personal Finance Tracker</p>
-  <h1 id="page-title">Track cashflow with clarity.</h1>
-  <p class="hero-copy">A focused Flask dashboard for logging income and expenses, then reading the story behind the numbers.</p>
+<header class="app-header">
+  <div class="shell header-inner">
+    <div>
+      <p class="eyebrow">Personal Finance Tracker</p>
+      <h1 id="page-title">Make every transaction explain itself.</h1>
+    </div>
+    <div class="header-actions" aria-label="Dashboard actions">
+      <button class="button button-ghost" type="button" id="refresh-button">Refresh data</button>
+      <button class="button button-secondary" type="button" id="export-button">Export CSV</button>
+    </div>
+  </div>
+</header>
+
+<section class="shell intro-grid" aria-labelledby="overview-title">
+  <div class="intro-copy">
+    <p class="section-kicker">Analyst-ready dashboard</p>
+    <h2 id="overview-title">Log income and expenses, then review the trend behind your monthly cashflow.</h2>
+    <p>Built with Flask, SQLite, REST APIs, and Chart.js to show data handling from input to insight.</p>
+  </div>
+  <div class="status-card" aria-live="polite">
+    <span class="status-dot" aria-hidden="true"></span>
+    <span id="sync-status">Loading dashboard data</span>
+  </div>
 </section>
+
+<section class="shell metrics-grid" aria-label="Financial summary">
+  <article class="metric-card">
+    <span class="metric-label">Income</span>
+    <strong id="metric-income">$0.00</strong>
+    <small>Total money in</small>
+  </article>
+  <article class="metric-card">
+    <span class="metric-label">Expenses</span>
+    <strong id="metric-expenses">$0.00</strong>
+    <small>Total money out</small>
+  </article>
+  <article class="metric-card metric-card-accent">
+    <span class="metric-label">Net cashflow</span>
+    <strong id="metric-net">$0.00</strong>
+    <small>Income minus expenses</small>
+  </article>
+  <article class="metric-card">
+    <span class="metric-label">Savings rate</span>
+    <strong id="metric-savings-rate">0%</strong>
+    <small id="metric-transaction-count">0 transactions</small>
+  </article>
+</section>
+
+<main class="shell dashboard-grid" aria-labelledby="page-title">
+  <section class="panel form-panel" aria-labelledby="transaction-form-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Quick add</p>
+        <h2 id="transaction-form-title">New transaction</h2>
+      </div>
+      <span class="panel-badge">REST API</span>
+    </div>
+
+    <form id="transaction-form" novalidate>
+      <div class="segmented-control" role="radiogroup" aria-label="Transaction type">
+        <label>
+          <input type="radio" name="kind" value="expense" checked>
+          <span>Expense</span>
+        </label>
+        <label>
+          <input type="radio" name="kind" value="income">
+          <span>Income</span>
+        </label>
+      </div>
+
+      <div class="form-field">
+        <label for="description">Description</label>
+        <input id="description" name="description" type="text" maxlength="140" autocomplete="off" placeholder="Rent, salary, groceries" required>
+        <p class="field-error" data-error-for="description"></p>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="amount">Amount</label>
+          <input id="amount" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" required>
+          <p class="field-error" data-error-for="amount"></p>
+        </div>
+        <div class="form-field">
+          <label for="occurred_on">Date</label>
+          <input id="occurred_on" name="occurred_on" type="date" required>
+          <p class="field-error" data-error-for="occurred_on"></p>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="category">Category</label>
+        <input id="category" name="category" type="text" list="category-options" maxlength="80" placeholder="Food" required>
+        <datalist id="category-options"></datalist>
+        <p class="field-error" data-error-for="category"></p>
+      </div>
+
+      <div class="form-field">
+        <label for="notes">Notes <span class="optional-label">Optional</span></label>
+        <textarea id="notes" name="notes" rows="3" maxlength="280" placeholder="Add context for future analysis"></textarea>
+        <p class="field-error" data-error-for="notes"></p>
+      </div>
+
+      <button class="button button-primary button-full" type="submit" id="save-transaction-button">Save transaction</button>
+    </form>
+  </section>
+
+  <section class="panel chart-panel wide-panel" aria-labelledby="cashflow-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Trend</p>
+        <h2 id="cashflow-title">Monthly cashflow</h2>
+      </div>
+      <span class="panel-badge">Chart.js</span>
+    </div>
+    <p class="sr-only" id="cashflow-summary-text">Cashflow chart is loading.</p>
+    <div class="chart-wrap">
+      <canvas id="cashflow-chart" aria-describedby="cashflow-summary-text"></canvas>
+    </div>
+  </section>
+
+  <section class="panel chart-panel" aria-labelledby="category-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Spend mix</p>
+        <h2 id="category-title">Expenses by category</h2>
+      </div>
+    </div>
+    <p class="sr-only" id="category-summary-text">Category chart is loading.</p>
+    <div class="chart-wrap chart-wrap-small">
+      <canvas id="category-chart" aria-describedby="category-summary-text"></canvas>
+    </div>
+  </section>
+
+  <section class="panel budget-panel" aria-labelledby="budget-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Monthly guardrails</p>
+        <h2 id="budget-title">Budget progress</h2>
+      </div>
+    </div>
+    <div id="budget-list" class="budget-list" aria-live="polite"></div>
+  </section>
+
+  <section class="panel table-panel wide-panel" aria-labelledby="transactions-title">
+    <div class="panel-heading table-heading">
+      <div>
+        <p class="section-kicker">Ledger</p>
+        <h2 id="transactions-title">Transactions</h2>
+      </div>
+      <form id="filter-form" class="filter-form" aria-label="Filter transactions">
+        <label>
+          <span>Type</span>
+          <select id="filter-kind" name="kind">
+            <option value="">All</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+        </label>
+        <label>
+          <span>Start</span>
+          <input id="filter-start" name="start" type="date">
+        </label>
+        <label>
+          <span>End</span>
+          <input id="filter-end" name="end" type="date">
+        </label>
+        <button class="button button-ghost" type="submit">Apply</button>
+        <button class="button button-text" type="button" id="clear-filters-button">Clear</button>
+      </form>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Income and expense transaction ledger</caption>
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Description</th>
+            <th scope="col">Category</th>
+            <th scope="col">Type</th>
+            <th scope="col" class="amount-cell">Amount</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody id="transaction-rows">
+          <tr>
+            <td colspan="6" class="empty-cell">Loading transactions...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.FINANCE_TRACKER = { currency: "{{ currency_code }}" };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+<script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
 {% endblock %}

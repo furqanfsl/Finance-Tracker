@@ -1,6 +1,6 @@
 ﻿from __future__ import annotations
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, current_app, jsonify, render_template, request
 
 from .models import Budget, Transaction, db
 from .services import (
@@ -19,7 +19,7 @@ api_bp = Blueprint("api", __name__, url_prefix="/api")
 
 @ui_bp.get("/")
 def dashboard():
-    return render_template("index.html")
+    return render_template("index.html", currency_code=current_app.config.get("CURRENCY_CODE", "USD"))
 
 
 @api_bp.get("/health")
