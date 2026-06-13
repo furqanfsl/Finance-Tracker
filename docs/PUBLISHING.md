@@ -14,7 +14,7 @@ gh auth login
 Then publish from the project root:
 
 ```powershell
-.\scripts\publish.ps1
+.\scripts\publish.ps1 -RepoName Finance-Tracker
 ```
 
-The script creates a public `personal-finance-tracker` repository if `origin` does not exist, then pushes the current branch. Use `-Visibility private` if you want a private repo.
+The script creates a public `Finance-Tracker` repository if `origin` does not exist, then pushes the current branch. Use `-Visibility private` if you want a private repo.

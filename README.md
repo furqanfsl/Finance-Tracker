@@ -26,6 +26,25 @@ A portfolio-ready Flask app for logging income and expenses, reviewing cashflow,
 
 ## Quick start
 
+### Easiest on Windows
+
+Double-click `start.bat`, or run:
+
+```powershell
+.\scripts\start.ps1
+```
+
+The helper installs the locked dependencies with `uv`, starts Flask on
+<http://127.0.0.1:5000>, and opens the dashboard in your browser.
+
+If port `5000` is already busy, use another port:
+
+```powershell
+.\scripts\start.ps1 -Port 5001
+```
+
+### Manual start
+
 ```powershell
 uv sync
 uv run flask --app run.py run --debug

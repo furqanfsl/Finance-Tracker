@@ -1,5 +1,5 @@
 param(
-    [string]$RepoName = "personal-finance-tracker",
+    [string]$RepoName = "Finance-Tracker",
     [ValidateSet("public", "private")]
     [string]$Visibility = "public"
 )

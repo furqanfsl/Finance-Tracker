@@ -825,6 +825,90 @@ tbody tr:last-child td {
     height: 260px !important;
   }
 
+  .table-wrap {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+  }
+
+  table {
+    min-width: 0;
+  }
+
+  table,
+  thead,
+  tbody,
+  tr,
+  td {
+    display: block;
+    width: 100%;
+  }
+
+  thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  tbody tr {
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  tbody tr:hover {
+    background: rgba(255, 255, 255, 0.055);
+  }
+
+  td {
+    display: grid;
+    grid-template-columns: minmax(82px, 0.34fr) minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  td::before {
+    content: attr(data-label);
+    color: var(--color-muted);
+    font-family: "Fira Code", "Cascadia Code", monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  td:last-child {
+    border-bottom: 0;
+  }
+
+  td.empty-cell {
+    display: block;
+  }
+
+  td.empty-cell::before {
+    display: none;
+  }
+
+  .amount-cell {
+    text-align: left;
+  }
+
+  .delete-button {
+    width: 100%;
+    max-width: 190px;
+  }
+
   .toast {
     right: 12px;
     bottom: 12px;

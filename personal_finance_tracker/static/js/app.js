@@ -266,15 +266,15 @@ function renderTransactions(transactions) {
       const signedAmount = transaction.kind === "income" ? transaction.amount : -transaction.amount;
       return `
         <tr>
-          <td>${asDateLabel(transaction.occurred_on)}</td>
-          <td>
+          <td data-label="Date">${asDateLabel(transaction.occurred_on)}</td>
+          <td data-label="Description">
             <strong>${escapeHtml(transaction.description)}</strong>
             ${transaction.notes ? `<br><small>${escapeHtml(transaction.notes)}</small>` : ""}
           </td>
-          <td>${escapeHtml(transaction.category)}</td>
-          <td><span class="kind-pill ${transaction.kind}">${transaction.kind}</span></td>
-          <td class="amount-cell">${money(signedAmount)}</td>
-          <td><button class="delete-button" type="button" data-delete-id="${transaction.id}" aria-label="Delete ${escapeHtml(transaction.description)}">Delete</button></td>
+          <td data-label="Category">${escapeHtml(transaction.category)}</td>
+          <td data-label="Type"><span class="kind-pill ${transaction.kind}">${transaction.kind}</span></td>
+          <td data-label="Amount" class="amount-cell">${money(signedAmount)}</td>
+          <td data-label="Action"><button class="delete-button" type="button" data-delete-id="${transaction.id}" aria-label="Delete ${escapeHtml(transaction.description)}">Delete</button></td>
         </tr>`;
     })
     .join("");
