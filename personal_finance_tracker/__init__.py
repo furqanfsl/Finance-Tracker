@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import click
 from flask import Flask
@@ -42,6 +43,25 @@ def register_cli(app: Flask) -> None:
         """Create database tables without deleting existing data."""
         db.create_all()
         click.echo("Database tables are ready.")
+
+    @app.cli.command("reset-db")
+    @click.option("--seed/--no-seed", default=True, help="Load sample data after resetting.")
+    def reset_db_command(seed: bool):
+        """Drop and recreate all database tables for a fresh local workspace."""
+        db.drop_all()
+        db.create_all()
+        created = seed_sample_data(force=True) if seed else 0
+        click.echo(f"Database reset complete. Created {created} sample records.")
+
+    @app.cli.command("db-path")
+    def db_path_command():
+        """Print the active SQLite database path for DB Browser for SQLite."""
+        uri = app.config["SQLALCHEMY_DATABASE_URI"]
+        prefix = "sqlite:///"
+        if uri.startswith(prefix):
+            click.echo(str(Path(uri.removeprefix(prefix)).resolve()))
+        else:
+            click.echo(uri)
 
     @app.cli.command("seed-db")
     @click.option("--force", is_flag=True, help="Replace existing sample records.")

@@ -7,6 +7,8 @@ from .services import (
     ValidationError,
     create_or_update_budget,
     create_transaction,
+    commit_or_raise,
+    database_overview,
     dashboard_summary,
     delete_transaction,
     get_category_options,
@@ -25,6 +27,11 @@ def dashboard():
 @api_bp.get("/health")
 def health():
     return jsonify({"status": "ok"})
+
+
+@api_bp.get("/database")
+def database_status():
+    return jsonify({"database": database_overview()})
 
 
 @api_bp.get("/summary")
@@ -91,7 +98,10 @@ def budgets_delete(budget_id: int):
     if budget is None:
         return jsonify({"error": "Budget not found."}), 404
     db.session.delete(budget)
-    db.session.commit()
+    try:
+        commit_or_raise("Budget could not be deleted.")
+    except ValidationError as exc:
+        return jsonify({"error": exc.message}), 500
     return jsonify({"status": "deleted"})
 
 

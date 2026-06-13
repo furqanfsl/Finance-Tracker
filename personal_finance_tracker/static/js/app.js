@@ -21,6 +21,7 @@ const percentFormatter = new Intl.NumberFormat(undefined, {
 
 const selectors = {
   form: document.querySelector("#transaction-form"),
+  budgetForm: document.querySelector("#budget-form"),
   filterForm: document.querySelector("#filter-form"),
   toast: document.querySelector("#toast"),
   syncStatus: document.querySelector("#sync-status"),
@@ -28,10 +29,17 @@ const selectors = {
   exportButton: document.querySelector("#export-button"),
   clearFiltersButton: document.querySelector("#clear-filters-button"),
   categoryInput: document.querySelector("#category"),
+  budgetCategoryInput: document.querySelector("#budget-category"),
   categoryOptions: document.querySelector("#category-options"),
   transactionRows: document.querySelector("#transaction-rows"),
   budgetList: document.querySelector("#budget-list"),
+  dbFile: document.querySelector("#db-file"),
+  dbTableCount: document.querySelector("#db-table-count"),
+  dbTransactionCount: document.querySelector("#db-transaction-count"),
+  dbBudgetCount: document.querySelector("#db-budget-count"),
+  dbTableList: document.querySelector("#db-table-list"),
   saveButton: document.querySelector("#save-transaction-button"),
+  saveBudgetButton: document.querySelector("#save-budget-button"),
 };
 
 function money(value) {
@@ -93,10 +101,11 @@ function updateMetrics(summary) {
 
 function chartDefaults() {
   return {
-    color: "#cbd5e1",
+    color: getComputedStyle(document.documentElement).getPropertyValue("--color-muted").trim() || "#667085",
     font: {
-      family: "Fira Sans, Segoe UI, system-ui, sans-serif",
+      family: "Aptos, Segoe UI Variable, Segoe UI, system-ui, sans-serif",
     },
+    grid: "rgba(17, 24, 39, 0.08)",
   };
 }
 
@@ -111,13 +120,14 @@ function renderCashflowChart(monthly) {
   const income = monthly.map((item) => item.income);
   const expenses = monthly.map((item) => item.expenses);
   const net = monthly.map((item) => item.net);
+  const defaults = chartDefaults();
 
   if (state.cashflowChart) {
     state.cashflowChart.destroy();
   }
 
-  window.Chart.defaults.color = chartDefaults().color;
-  window.Chart.defaults.font.family = chartDefaults().font.family;
+  window.Chart.defaults.color = defaults.color;
+  window.Chart.defaults.font.family = defaults.font.family;
 
   state.cashflowChart = new window.Chart(document.querySelector("#cashflow-chart"), {
     data: {
@@ -127,32 +137,39 @@ function renderCashflowChart(monthly) {
           type: "bar",
           label: "Income",
           data: income,
-          backgroundColor: "rgba(52, 211, 153, 0.72)",
-          borderRadius: 10,
+          backgroundColor: "rgba(13, 107, 77, 0.78)",
+          borderRadius: 9,
+          borderSkipped: false,
+          maxBarThickness: 38,
         },
         {
           type: "bar",
           label: "Expenses",
           data: expenses,
-          backgroundColor: "rgba(248, 113, 113, 0.66)",
-          borderRadius: 10,
+          backgroundColor: "rgba(194, 65, 72, 0.62)",
+          borderRadius: 9,
+          borderSkipped: false,
+          maxBarThickness: 38,
         },
         {
           type: "line",
           label: "Net",
           data: net,
-          borderColor: "#60a5fa",
-          backgroundColor: "rgba(96, 165, 250, 0.16)",
+          borderColor: "#244ed8",
+          backgroundColor: "rgba(36, 78, 216, 0.12)",
           borderWidth: 3,
-          pointRadius: 4,
+          pointRadius: 3,
+          pointHoverRadius: 5,
           tension: 0.36,
           fill: false,
         },
       ],
     },
     options: {
+      animation: false,
       maintainAspectRatio: false,
       responsive: true,
+      resizeDelay: 120,
       interaction: { mode: "index", intersect: false },
       plugins: {
         legend: { labels: { usePointStyle: true, boxWidth: 9, boxHeight: 9 } },
@@ -163,10 +180,10 @@ function renderCashflowChart(monthly) {
         },
       },
       scales: {
-        x: { grid: { color: "rgba(255, 255, 255, 0.06)" } },
+        x: { grid: { color: defaults.grid } },
         y: {
           beginAtZero: true,
-          grid: { color: "rgba(255, 255, 255, 0.07)" },
+          grid: { color: defaults.grid },
           ticks: { callback: (value) => money(value) },
         },
       },
@@ -190,9 +207,10 @@ function renderCategoryChart(categories) {
     state.categoryChart.destroy();
   }
 
-  const labels = categories.map((item) => item.category);
-  const values = categories.map((item) => item.amount);
-  const palette = ["#60a5fa", "#34d399", "#f87171", "#fbbf24", "#a78bfa", "#22d3ee", "#fb7185", "#cbd5e1"];
+  const hasData = categories.length > 0;
+  const labels = hasData ? categories.map((item) => item.category) : ["No expenses yet"];
+  const values = hasData ? categories.map((item) => item.amount) : [1];
+  const palette = ["#0d6b4d", "#244ed8", "#c24148", "#b7791f", "#6d5bd0", "#2f8f9d", "#9f3a5f", "#8a97a9"];
 
   state.categoryChart = new window.Chart(document.querySelector("#category-chart"), {
     type: "doughnut",
@@ -201,22 +219,24 @@ function renderCategoryChart(categories) {
       datasets: [
         {
           data: values,
-          backgroundColor: labels.map((_, index) => palette[index % palette.length]),
-          borderColor: "rgba(15, 23, 42, 0.92)",
-          borderWidth: 3,
-          hoverOffset: 8,
+          backgroundColor: labels.map((_, index) => (hasData ? palette[index % palette.length] : "#d8ded7")),
+          borderColor: "#ffffff",
+          borderWidth: 4,
+          hoverOffset: hasData ? 6 : 0,
         },
       ],
     },
     options: {
+      animation: false,
       maintainAspectRatio: false,
       responsive: true,
-      cutout: "68%",
+      resizeDelay: 120,
+      cutout: "70%",
       plugins: {
         legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 9, boxHeight: 9 } },
         tooltip: {
           callbacks: {
-            label: (context) => `${context.label}: ${money(context.parsed)}`,
+            label: (context) => (hasData ? `${context.label}: ${money(context.parsed)}` : "No expense data yet"),
           },
         },
       },
@@ -231,7 +251,7 @@ function renderCategoryChart(categories) {
 
 function renderBudgets(budgets) {
   if (!budgets.length) {
-    selectors.budgetList.innerHTML = `<p class="empty-state">No budgets yet. Seed data adds starter limits for common spending categories.</p>`;
+    selectors.budgetList.innerHTML = `<p class="empty-state">No budgets yet. Add a category limit to start tracking guardrails.</p>`;
     return;
   }
 
@@ -243,10 +263,14 @@ function renderBudgets(budgets) {
         <article class="budget-item">
           <div class="budget-row">
             <span class="budget-name">${escapeHtml(budget.category)}</span>
-            <span class="budget-meta">${money(budget.spent)} of ${money(budget.monthly_limit)} · ${statusText}</span>
+            <span class="budget-meta">${money(budget.spent)} of ${money(budget.monthly_limit)} - ${statusText}</span>
           </div>
           <div class="progress-track" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percentage}" aria-label="${escapeHtml(budget.category)} budget usage">
             <div class="progress-value ${budget.status}" style="width: ${percentage}%"></div>
+          </div>
+          <div class="budget-actions">
+            <span class="budget-meta">${percentage}% used</span>
+            <button class="remove-budget-button" type="button" data-delete-budget-id="${budget.id}" aria-label="Delete ${escapeHtml(budget.category)} budget">Remove</button>
           </div>
         </article>`;
     })
@@ -280,12 +304,38 @@ function renderTransactions(transactions) {
     .join("");
 }
 
+function renderDatabaseStatus(database) {
+  const tables = database.tables || [];
+  const transactionTable = tables.find((table) => table.name === "transactions");
+  const budgetTable = tables.find((table) => table.name === "budgets");
+
+  selectors.dbFile.textContent = database.path || "SQLite database";
+  selectors.dbTableCount.textContent = `${tables.length}`;
+  selectors.dbTransactionCount.textContent = `${transactionTable?.row_count ?? 0}`;
+  selectors.dbBudgetCount.textContent = `${budgetTable?.row_count ?? 0}`;
+
+  selectors.dbTableList.innerHTML = tables.length
+    ? tables
+        .map(
+          (table) => `
+            <div class="db-row">
+              <strong>${escapeHtml(table.name)}</strong>
+              <span>${table.row_count} rows</span>
+            </div>`,
+        )
+        .join("")
+    : `<p class="empty-state">No database tables were found.</p>`;
+}
+
 function populateCategoryOptions() {
   const selectedKind = selectors.form.querySelector('input[name="kind"]:checked')?.value || "expense";
-  const values = state.categories[selectedKind] || [];
+  const values = [...new Set([...(state.categories[selectedKind] || []), ...(state.categories.expense || [])])];
   selectors.categoryOptions.innerHTML = values.map((category) => `<option value="${escapeHtml(category)}"></option>`).join("");
   if (!selectors.categoryInput.value && values.length) {
     selectors.categoryInput.placeholder = values[0];
+  }
+  if (selectors.budgetCategoryInput && values.length) {
+    selectors.budgetCategoryInput.placeholder = values[0];
   }
 }
 
@@ -298,10 +348,10 @@ function clearFieldErrors() {
 function showFieldErrors(errors = {}) {
   clearFieldErrors();
   for (const [field, message] of Object.entries(errors)) {
-    const node = document.querySelector(`[data-error-for="${field}"]`);
-    if (node) {
+    const nodes = document.querySelectorAll(`[data-error-for="${field}"], [data-error-for="budget-${field}"]`);
+    nodes.forEach((node) => {
       node.textContent = message;
-    }
+    });
   }
 }
 
@@ -317,13 +367,14 @@ function escapeHtml(value) {
 async function loadDashboard() {
   const query = buildFilterQuery();
   const suffix = query ? `?${query}` : "";
-  setStatus("Loading dashboard data");
+  setStatus("Loading");
   selectors.refreshButton.disabled = true;
 
   try {
-    const [summary, transactionPayload] = await Promise.all([
+    const [summary, transactionPayload, databasePayload] = await Promise.all([
       apiFetch(`/api/summary${suffix}`),
       apiFetch(`/api/transactions${suffix}`),
+      apiFetch("/api/database"),
     ]);
 
     state.categories = summary.categories || { income: [], expense: [] };
@@ -333,16 +384,17 @@ async function loadDashboard() {
     renderCategoryChart(summary.category_breakdown || []);
     renderBudgets(summary.budgets || []);
     renderTransactions(transactionPayload.transactions || []);
-    setStatus("Dashboard data is up to date");
+    renderDatabaseStatus(databasePayload.database || {});
+    setStatus("Up to date");
   } catch (error) {
-    setStatus("Could not load dashboard data");
+    setStatus("Needs attention");
     showToast(error.error || "Something went wrong while loading data.");
   } finally {
     selectors.refreshButton.disabled = false;
   }
 }
 
-function payloadFromForm() {
+function payloadFromTransactionForm() {
   const data = new FormData(selectors.form);
   return {
     kind: data.get("kind"),
@@ -351,6 +403,14 @@ function payloadFromForm() {
     occurred_on: data.get("occurred_on"),
     category: data.get("category"),
     notes: data.get("notes"),
+  };
+}
+
+function payloadFromBudgetForm() {
+  const data = new FormData(selectors.budgetForm);
+  return {
+    category: data.get("category"),
+    monthly_limit: data.get("monthly_limit"),
   };
 }
 
@@ -363,7 +423,7 @@ async function handleTransactionSubmit(event) {
   try {
     await apiFetch("/api/transactions", {
       method: "POST",
-      body: JSON.stringify(payloadFromForm()),
+      body: JSON.stringify(payloadFromTransactionForm()),
     });
     selectors.form.reset();
     setDefaultDate();
@@ -379,7 +439,30 @@ async function handleTransactionSubmit(event) {
   }
 }
 
-async function handleDelete(event) {
+async function handleBudgetSubmit(event) {
+  event.preventDefault();
+  clearFieldErrors();
+  selectors.saveBudgetButton.disabled = true;
+  selectors.saveBudgetButton.textContent = "Saving...";
+
+  try {
+    await apiFetch("/api/budgets", {
+      method: "POST",
+      body: JSON.stringify(payloadFromBudgetForm()),
+    });
+    selectors.budgetForm.reset();
+    showToast("Budget saved.");
+    await loadDashboard();
+  } catch (error) {
+    showFieldErrors(error.field_errors || {});
+    showToast(error.error || "Budget could not be saved.");
+  } finally {
+    selectors.saveBudgetButton.disabled = false;
+    selectors.saveBudgetButton.textContent = "Save budget";
+  }
+}
+
+async function handleTransactionDelete(event) {
   const button = event.target.closest("[data-delete-id]");
   if (!button) return;
 
@@ -393,6 +476,25 @@ async function handleDelete(event) {
     await loadDashboard();
   } catch (error) {
     showToast(error.error || "Transaction could not be deleted.");
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function handleBudgetDelete(event) {
+  const button = event.target.closest("[data-delete-budget-id]");
+  if (!button) return;
+
+  const confirmed = window.confirm("Delete this budget? Transactions will stay in the ledger.");
+  if (!confirmed) return;
+
+  button.disabled = true;
+  try {
+    await apiFetch(`/api/budgets/${button.dataset.deleteBudgetId}`, { method: "DELETE" });
+    showToast("Budget deleted.");
+    await loadDashboard();
+  } catch (error) {
+    showToast(error.error || "Budget could not be deleted.");
   } finally {
     button.disabled = false;
   }
@@ -436,6 +538,7 @@ function setDefaultDate() {
 
 function bindEvents() {
   selectors.form.addEventListener("submit", handleTransactionSubmit);
+  selectors.budgetForm.addEventListener("submit", handleBudgetSubmit);
   selectors.filterForm.addEventListener("submit", (event) => {
     event.preventDefault();
     loadDashboard();
@@ -446,7 +549,8 @@ function bindEvents() {
   });
   selectors.refreshButton.addEventListener("click", loadDashboard);
   selectors.exportButton.addEventListener("click", exportCsv);
-  selectors.transactionRows.addEventListener("click", handleDelete);
+  selectors.transactionRows.addEventListener("click", handleTransactionDelete);
+  selectors.budgetList.addEventListener("click", handleBudgetDelete);
   selectors.form.querySelectorAll('input[name="kind"]').forEach((input) => {
     input.addEventListener("change", populateCategoryOptions);
   });

@@ -59,6 +59,22 @@ Then open <http://127.0.0.1:5000>.
 uv run pytest
 ```
 
+## SQLite database
+
+The app creates and seeds `instance/finance_tracker.sqlite3` automatically. To initialize it yourself:
+
+```powershell
+.\scripts\init_database.ps1
+```
+
+To open the live database in DB Browser for SQLite:
+
+```powershell
+.\scripts\open_database.ps1
+```
+
+See `docs/DATABASE.md` for table details.
+
 ## Environment variables
 
 Copy `.env.example` to `.env` if you want to customize local settings.
@@ -103,4 +119,5 @@ personal_finance_tracker/
   templates/           Jinja templates
 tests/                 Pytest suite
 docs/                  Extra project notes
+database/              SQL schema and demo database artifacts
 ```

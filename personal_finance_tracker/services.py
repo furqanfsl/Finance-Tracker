@@ -4,9 +4,11 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from pathlib import Path
 from typing import Any
 
-from sqlalchemy import func
+from sqlalchemy import func, inspect, text
+from sqlalchemy.exc import SQLAlchemyError
 
 from .models import Budget, Transaction, db
 
@@ -59,6 +61,14 @@ def parse_optional_iso_date(value: Any) -> date | None:
     if not value:
         return None
     return parse_iso_date(value)
+
+
+def commit_or_raise(message: str = "Database change could not be saved.") -> None:
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        raise ValidationError(message, {}) from None
 
 
 def normalize_text(value: Any, *, field: str, max_length: int) -> str:
@@ -122,7 +132,7 @@ def create_transaction(payload: dict[str, Any]) -> Transaction:
     validated = validate_transaction_payload(payload)
     transaction = Transaction(**validated)
     db.session.add(transaction)
-    db.session.commit()
+    commit_or_raise("Transaction could not be saved.")
     return transaction
 
 
@@ -131,7 +141,7 @@ def delete_transaction(transaction_id: int) -> bool:
     if transaction is None:
         return False
     db.session.delete(transaction)
-    db.session.commit()
+    commit_or_raise("Transaction could not be deleted.")
     return True
 
 
@@ -267,5 +277,33 @@ def create_or_update_budget(payload: dict[str, Any]) -> Budget:
     else:
         budget.category = category
         budget.monthly_limit_cents = monthly_limit_cents
-    db.session.commit()
+    commit_or_raise("Budget could not be saved.")
     return budget
+
+
+def database_overview() -> dict[str, Any]:
+    """Return local SQLite database metadata for the dashboard and DB Browser docs."""
+    engine = db.engine
+    inspector = inspect(engine)
+    database_path = None
+    database_size = 0
+
+    if engine.url.drivername.startswith("sqlite") and engine.url.database:
+        path = Path(engine.url.database).resolve()
+        database_path = str(path)
+        if path.exists():
+            database_size = path.stat().st_size
+
+    tables: list[dict[str, Any]] = []
+    for table_name in sorted(inspector.get_table_names()):
+        safe_name = table_name.replace('"', '""')
+        row_count = db.session.execute(text(f'SELECT COUNT(*) FROM "{safe_name}"')).scalar_one()
+        tables.append({"name": table_name, "row_count": int(row_count)})
+
+    return {
+        "driver": engine.url.drivername,
+        "path": database_path,
+        "exists": bool(database_path and Path(database_path).exists()),
+        "size_bytes": database_size,
+        "tables": tables,
+    }

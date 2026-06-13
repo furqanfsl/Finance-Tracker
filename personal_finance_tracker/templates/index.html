@@ -1,32 +1,76 @@
 {% extends "base.html" %}
 
 {% block content %}
-<header class="app-header">
-  <div class="shell header-inner">
-    <div>
-      <p class="eyebrow">Personal Finance Tracker</p>
-      <h1 id="page-title">Make every transaction explain itself.</h1>
-    </div>
-    <div class="header-actions" aria-label="Dashboard actions">
-      <button class="button button-ghost" type="button" id="refresh-button">Refresh data</button>
-      <button class="button button-secondary" type="button" id="export-button">Export CSV</button>
-    </div>
+<header class="topbar shell" aria-label="Primary">
+  <a class="brand" href="#page-title" aria-label="Finance Tracker home">
+    <span class="brand-mark" aria-hidden="true">FT</span>
+    <span>Finance Tracker</span>
+  </a>
+  <nav class="topnav" aria-label="Dashboard sections">
+    <a href="#overview-title">Overview</a>
+    <a href="#cashflow-title">Cashflow</a>
+    <a href="#budget-title">Budgets</a>
+    <a href="#transactions-title">Ledger</a>
+  </nav>
+  <div class="header-actions" aria-label="Dashboard actions">
+    <button class="button button-ghost" type="button" id="refresh-button">Refresh</button>
+    <button class="button button-secondary" type="button" id="export-button">Export CSV</button>
   </div>
 </header>
 
-<section class="shell intro-grid" aria-labelledby="overview-title">
-  <div class="intro-copy">
-    <p class="section-kicker">Analyst-ready dashboard</p>
-    <h2 id="overview-title">Log income and expenses.<br>Review monthly cashflow.</h2>
-    <p>Flask, SQLite, REST APIs, and Chart.js.<br>Inputs become dashboard insights.</p>
+<section class="shell hero-grid" aria-labelledby="page-title">
+  <div class="hero-copy">
+    <p class="eyebrow">Private finance workspace</p>
+    <h1 id="page-title">Personal finance, clearly tracked.</h1>
+    <p>
+      Add transactions, manage budgets, inspect SQLite, and export clean records from one local Flask app.
+    </p>
+    <div class="hero-actions">
+      <a class="button button-primary" href="#transaction-form">Add transaction</a>
+      <a class="button button-ghost" href="#transactions-title">Review ledger</a>
+    </div>
   </div>
-  <div class="status-card" aria-live="polite">
-    <span class="status-dot" aria-hidden="true"></span>
-    <span id="sync-status">Loading dashboard data</span>
-  </div>
+
+  <aside class="hero-card" aria-labelledby="database-title">
+    <div class="hero-card-top">
+      <div>
+        <p class="section-kicker">Live backend</p>
+        <h2 id="database-title">SQLite connected</h2>
+      </div>
+      <span class="health-pill" id="sync-status" aria-live="polite">Loading data</span>
+    </div>
+    <dl class="database-grid">
+      <div>
+        <dt>Database file</dt>
+        <dd id="db-file">Checking...</dd>
+      </div>
+      <div>
+        <dt>Tables</dt>
+        <dd id="db-table-count">-</dd>
+      </div>
+      <div>
+        <dt>Transactions</dt>
+        <dd id="db-transaction-count">-</dd>
+      </div>
+      <div>
+        <dt>Budgets</dt>
+        <dd id="db-budget-count">-</dd>
+      </div>
+    </dl>
+    <div class="backend-stack" aria-label="Database quick actions">
+      <code>.\scripts\open_database.ps1</code>
+      <ul>
+        <li>Creates tables automatically</li>
+        <li>Seeds portfolio demo data</li>
+        <li>Works with DB Browser for SQLite</li>
+      </ul>
+    </div>
+    <p class="hero-note">Open this file in DB Browser for SQLite to view the live tables.</p>
+  </aside>
 </section>
 
-<section class="shell metrics-grid" aria-label="Financial summary">
+<section class="shell metrics-grid" aria-labelledby="overview-title">
+  <h2 class="sr-only" id="overview-title">Financial overview</h2>
   <article class="metric-card">
     <span class="metric-label">Income</span>
     <strong id="metric-income">$0.00</strong>
@@ -121,11 +165,34 @@
     </div>
   </section>
 
-  <section class="panel chart-panel" aria-labelledby="category-title">
+  <section class="panel budget-panel" aria-labelledby="budget-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Monthly guardrails</p>
+        <h2 id="budget-title">Budget control</h2>
+      </div>
+    </div>
+    <form id="budget-form" class="budget-form" novalidate>
+      <div class="form-field">
+        <label for="budget-category">Category</label>
+        <input id="budget-category" name="category" type="text" list="category-options" maxlength="80" placeholder="Food" required>
+        <p class="field-error" data-error-for="budget-category"></p>
+      </div>
+      <div class="form-field">
+        <label for="budget-limit">Monthly limit</label>
+        <input id="budget-limit" name="monthly_limit" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="300.00" required>
+        <p class="field-error" data-error-for="monthly_limit"></p>
+      </div>
+      <button class="button button-secondary button-full" type="submit" id="save-budget-button">Save budget</button>
+    </form>
+    <div id="budget-list" class="budget-list" aria-live="polite"></div>
+  </section>
+
+  <section class="panel chart-panel category-panel" aria-labelledby="category-title">
     <div class="panel-heading">
       <div>
         <p class="section-kicker">Spend mix</p>
-        <h2 id="category-title">Expenses by category</h2>
+        <h2 id="category-title">Category breakdown</h2>
       </div>
     </div>
     <p class="sr-only" id="category-summary-text">Category chart is loading.</p>
@@ -134,14 +201,16 @@
     </div>
   </section>
 
-  <section class="panel budget-panel" aria-labelledby="budget-title">
+  <section class="panel db-panel" aria-labelledby="backend-title">
     <div class="panel-heading">
       <div>
-        <p class="section-kicker">Monthly guardrails</p>
-        <h2 id="budget-title">Budget progress</h2>
+        <p class="section-kicker">Database</p>
+        <h2 id="backend-title">Backend tables</h2>
       </div>
     </div>
-    <div id="budget-list" class="budget-list" aria-live="polite"></div>
+    <div class="db-table-list" id="db-table-list" aria-live="polite">
+      <p class="empty-state">Loading database tables...</p>
+    </div>
   </section>
 
   <section class="panel table-panel wide-panel" aria-labelledby="transactions-title">

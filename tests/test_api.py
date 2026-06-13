@@ -93,3 +93,26 @@ def test_budget_create_and_progress(client):
     assert budget_response.status_code == 201
     assert budgets[0]["category"] == "Food"
     assert budgets[0]["monthly_limit"] == 100.00
+
+
+def test_budget_delete(client):
+    budget = client.post("/api/budgets", json={"category": "Food", "monthly_limit": "100.00"}).get_json()[
+        "budget"
+    ]
+
+    response = client.delete(f"/api/budgets/{budget['id']}")
+    budgets = client.get("/api/budgets").get_json()["budgets"]
+
+    assert response.status_code == 200
+    assert budgets == []
+
+
+def test_database_status_endpoint(client):
+    create_transaction(client, category="Food", amount="25.00", occurred_on="2026-06-12")
+
+    response = client.get("/api/database")
+    payload = response.get_json()["database"]
+
+    assert response.status_code == 200
+    assert payload["exists"] is True
+    assert {table["name"] for table in payload["tables"]} == {"budgets", "transactions"}
