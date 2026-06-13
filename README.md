@@ -1,6 +1,6 @@
-# Personal Finance Tracker
+# Finance-Tracker
 
-A portfolio-ready Flask app for logging income and expenses, reviewing cashflow, and visualizing category trends with Chart.js.
+A portfolio-ready full-stack web application for personal finance management. Built with a Python/Flask backend, SQLite database, and vanilla JavaScript frontend for logging income, expenses, budgets, and Chart.js dashboard insights.
 
 ## What it demonstrates
 
@@ -8,6 +8,7 @@ A portfolio-ready Flask app for logging income and expenses, reviewing cashflow,
 - SQLite persistence with Flask-SQLAlchemy
 - REST API endpoints for CRUD-style data handling
 - Integer-cent money storage to avoid floating-point rounding errors
+- Server-side input validation and normalized relational models
 - Responsive HTML/CSS dashboard with accessible forms and tables
 - Chart.js visualizations for monthly cashflow and category spend
 - Pytest coverage for API and service behavior
