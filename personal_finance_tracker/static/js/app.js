@@ -28,7 +28,6 @@ const selectors = {
   budgetForm: document.querySelector("#budget-form"),
   filterForm: document.querySelector("#filter-form"),
   toast: document.querySelector("#toast"),
-  syncStatus: document.querySelector("#sync-status"),
   refreshButton: document.querySelector("#refresh-button"),
   exportButton: document.querySelector("#export-button"),
   clearFiltersButton: document.querySelector("#clear-filters-button"),
@@ -37,11 +36,6 @@ const selectors = {
   categoryOptions: document.querySelector("#category-options"),
   transactionRows: document.querySelector("#transaction-rows"),
   budgetList: document.querySelector("#budget-list"),
-  dbFile: document.querySelector("#db-file"),
-  dbTableCount: document.querySelector("#db-table-count"),
-  dbTransactionCount: document.querySelector("#db-transaction-count"),
-  dbBudgetCount: document.querySelector("#db-budget-count"),
-  dbTableList: document.querySelector("#db-table-list"),
   saveButton: document.querySelector("#save-transaction-button"),
   saveBudgetButton: document.querySelector("#save-budget-button"),
 };
@@ -57,7 +51,7 @@ function asDateLabel(value) {
 }
 
 function setStatus(message) {
-  selectors.syncStatus.textContent = message;
+  document.documentElement.dataset.syncStatus = message;
 }
 
 function showToast(message) {
@@ -334,27 +328,7 @@ function renderTransactions(transactions) {
 }
 
 function renderDatabaseStatus(database) {
-  const tables = database.tables || [];
-  const transactionTable = tables.find((table) => table.name === "transactions");
-  const budgetTable = tables.find((table) => table.name === "budgets");
-
-  selectors.dbFile.textContent = database.path || "SQLite database";
-  selectors.dbTableCount.textContent = `${tables.length}`;
-  selectors.dbTransactionCount.textContent = `${transactionTable?.row_count ?? 0}`;
-  selectors.dbBudgetCount.textContent = `${budgetTable?.row_count ?? 0}`;
   state.databaseFingerprint = database.fingerprint || state.databaseFingerprint;
-
-  selectors.dbTableList.innerHTML = tables.length
-    ? tables
-        .map(
-          (table) => `
-            <div class="db-row">
-              <strong>${escapeHtml(table.name)}</strong>
-              <span>${table.row_count} rows</span>
-            </div>`,
-        )
-        .join("")
-    : `<p class="empty-state">No database tables were found.</p>`;
 }
 
 function populateCategoryOptions() {
