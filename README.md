@@ -108,6 +108,7 @@ Copy `.env.example` to `.env` if you want to customize local settings.
 | `GET` | `/api/health` | Health check |
 | `GET` | `/api/summary` | Dashboard totals, chart series, categories, and budgets |
 | `GET` | `/api/transactions` | List transactions with optional `kind`, `start`, and `end` filters |
+| `GET` | `/api/transactions/export.csv` | Download filtered transactions as CSV |
 | `POST` | `/api/transactions` | Create an income or expense transaction |
 | `DELETE` | `/api/transactions/<id>` | Delete a transaction |
 | `GET` | `/api/categories` | List category suggestions |

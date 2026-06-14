@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import csv
+from io import StringIO
+
 from flask import Blueprint, current_app, jsonify, render_template, request
 
 from .models import Budget, Transaction, db
@@ -50,6 +53,37 @@ def transactions_index():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     return jsonify({"transactions": [transaction.to_dict() for transaction in transactions]})
+
+
+@api_bp.get("/transactions/export.csv")
+def transactions_export():
+    try:
+        transactions = list_transactions(request.args.to_dict())
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Date", "Description", "Category", "Type", "Amount", "Notes"])
+    for transaction in transactions:
+        signed_amount = transaction.amount if transaction.kind == "income" else -transaction.amount
+        writer.writerow(
+            [
+                transaction.occurred_on.isoformat(),
+                transaction.description,
+                transaction.category,
+                transaction.kind,
+                f"{signed_amount:.2f}",
+                transaction.notes or "",
+            ]
+        )
+
+    filename = "finance-transactions.csv"
+    return current_app.response_class(
+        output.getvalue(),
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 @api_bp.post("/transactions")

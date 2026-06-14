@@ -159,6 +159,8 @@ def transaction_query(filters: dict[str, Any] | None = None):
 
     start = parse_optional_iso_date(filters.get("start"))
     end = parse_optional_iso_date(filters.get("end"))
+    if start and end and start > end:
+        raise ValueError("Start date must be before or equal to end date.")
     if start:
         query = query.filter(Transaction.occurred_on >= start)
     if end:

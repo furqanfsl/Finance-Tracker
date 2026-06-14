@@ -45,9 +45,9 @@ Validation response: `400 Bad Request`
 }
 ```
 
-## Summary filters
+## Transaction and summary filters
 
-`GET /api/summary?kind=expense&start=2026-06-01&end=2026-06-30`
+`GET /api/summary?kind=expense&category=Food&start=2026-06-01&end=2026-06-30`
 
 The summary endpoint powers all dashboard cards and charts. It returns:
 
@@ -57,3 +57,20 @@ The summary endpoint powers all dashboard cards and charts. It returns:
 - `recent_transactions`: latest transactions
 - `budgets`: current-month budget status
 - `categories`: suggestions for the transaction form
+
+The same `kind`, `category`, `start`, and `end` filters work on:
+
+- `GET /api/transactions`
+- `GET /api/transactions/export.csv`
+
+Dates must use `YYYY-MM-DD`. If both dates are provided, `start` must be before
+or equal to `end`.
+
+## Export transactions as CSV
+
+`GET /api/transactions/export.csv?kind=expense`
+
+The CSV export returns the same filtered ledger as `/api/transactions` with
+columns for date, description, category, type, signed amount, and notes. Expense
+amounts are negative and income amounts are positive so spreadsheet totals work
+without extra formulas.

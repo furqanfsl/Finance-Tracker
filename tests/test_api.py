@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import csv
+from io import StringIO
+
 
 def create_transaction(client, **overrides):
     payload = {
@@ -82,6 +85,58 @@ def test_transaction_filters_and_delete(client):
     assert delete_response.status_code == 200
     assert len(remaining["transactions"]) == 1
     assert remaining["transactions"][0]["kind"] == "expense"
+
+
+def test_transaction_category_filter_is_case_insensitive(client):
+    create_transaction(client, description="Groceries", category="Food", amount="25")
+    create_transaction(client, description="Train fare", category="Transport", amount="12")
+
+    response = client.get("/api/transactions?category=food")
+    transactions = response.get_json()["transactions"]
+
+    assert response.status_code == 200
+    assert len(transactions) == 1
+    assert transactions[0]["description"] == "Groceries"
+
+
+def test_reversed_date_range_returns_bad_request(client):
+    create_transaction(client, occurred_on="2026-06-12")
+
+    transactions_response = client.get("/api/transactions?start=2026-06-30&end=2026-06-01")
+    summary_response = client.get("/api/summary?start=2026-06-30&end=2026-06-01")
+
+    assert transactions_response.status_code == 400
+    assert summary_response.status_code == 400
+    assert transactions_response.get_json()["error"] == "Start date must be before or equal to end date."
+
+
+def test_transactions_csv_export_respects_filters(client):
+    create_transaction(client, description="Groceries", category="Food", amount="25", notes="Weekly shop")
+    create_transaction(
+        client,
+        kind="income",
+        description="Freelance project",
+        category="Freelance",
+        amount="450",
+        notes="Invoice paid",
+    )
+
+    response = client.get("/api/transactions/export.csv?kind=expense")
+    rows = list(csv.DictReader(StringIO(response.get_data(as_text=True))))
+
+    assert response.status_code == 200
+    assert response.mimetype == "text/csv"
+    assert "attachment; filename=finance-transactions.csv" in response.headers["Content-Disposition"]
+    assert rows == [
+        {
+            "Date": "2026-06-12",
+            "Description": "Groceries",
+            "Category": "Food",
+            "Type": "expense",
+            "Amount": "-25.00",
+            "Notes": "Weekly shop",
+        }
+    ]
 
 
 def test_budget_create_and_progress(client):
