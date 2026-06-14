@@ -24,6 +24,16 @@ def test_health_endpoint(client):
     assert response.get_json() == {"status": "ok"}
 
 
+def test_welcome_and_dashboard_pages_render(client):
+    welcome = client.get("/")
+    dashboard = client.get("/dashboard")
+
+    assert welcome.status_code == 200
+    assert b"Know where your money goes" in welcome.data
+    assert dashboard.status_code == 200
+    assert b'id="transaction-form"' in dashboard.data
+
+
 def test_create_transaction_and_summary(client):
     expense_response = create_transaction(client)
     income_response = create_transaction(

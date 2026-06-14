@@ -1,285 +1,62 @@
 {% extends "base.html" %}
 
+{% block title %}Finance Tracker | Welcome{% endblock %}
+
 {% block content %}
-<header class="topbar shell" aria-label="Primary">
-  <a class="brand" href="#page-title" aria-label="Finance Tracker home">
-    <span class="brand-mark" aria-hidden="true">FT</span>
-    <span>Finance Tracker</span>
-  </a>
-  <nav class="topnav" aria-label="Dashboard sections">
-    <a href="#overview-title">Overview</a>
-    <a href="#cashflow-title">Cashflow</a>
-    <a href="#budget-title">Budgets</a>
-    <a href="#transactions-title">Ledger</a>
-  </nav>
-  <div class="header-actions" aria-label="Dashboard actions">
-    <button class="button button-ghost" type="button" id="refresh-button">Refresh</button>
-    <button class="button button-secondary" type="button" id="export-button">Export CSV</button>
+<header class="site-header landing-header" aria-label="Primary">
+  <div class="service-band" aria-hidden="true"></div>
+  <div class="shell topbar">
+    <a class="brand" href="{{ url_for('ui.welcome') }}" aria-label="Finance Tracker home">
+      <span class="brand-mark" aria-hidden="true">FT</span>
+      <span class="brand-copy">
+        <strong>Finance Tracker</strong>
+        <small>Personal money dashboard</small>
+      </span>
+    </a>
+    <nav class="topnav" aria-label="Main navigation">
+      <a href="{{ url_for('ui.welcome') }}">Home</a>
+      <a href="{{ url_for('ui.dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('ui.dashboard') }}#transactions-title">Transactions</a>
+      <a href="{{ url_for('ui.dashboard') }}#budget-title">Budgets</a>
+    </nav>
+    <div class="header-actions" aria-label="Primary actions">
+      <a class="button button-secondary" href="{{ url_for('ui.dashboard') }}">Open dashboard</a>
+    </div>
   </div>
 </header>
 
-<section class="shell hero-grid" aria-labelledby="page-title">
-  <div class="hero-copy">
-    <p class="eyebrow">Private finance workspace</p>
-    <h1 id="page-title">Personal finance, clearly tracked.</h1>
-    <p>
-      Add transactions, manage budgets, inspect SQLite, and export clean records from one local Flask app.
-    </p>
-    <div class="hero-actions">
-      <a class="button button-primary" href="#transaction-form">Add transaction</a>
-      <a class="button button-ghost" href="#transactions-title">Review ledger</a>
+<main class="landing-main" aria-labelledby="page-title">
+  <section class="shell welcome-hero">
+    <div class="welcome-copy">
+      <p class="eyebrow">Simple money tracking</p>
+      <h1 id="page-title">Know where your money goes.</h1>
+      <p>
+        Track income, spending and budgets in a private local dashboard with clear charts and exportable records.
+      </p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="{{ url_for('ui.dashboard') }}">Start planning</a>
+        <a class="text-link" href="{{ url_for('ui.dashboard') }}#transactions-title">View transactions</a>
+      </div>
     </div>
-  </div>
-
-  <aside class="hero-card" aria-labelledby="database-title">
-    <div class="hero-card-top">
-      <div>
-        <p class="section-kicker">Live backend</p>
-        <h2 id="database-title">SQLite connected</h2>
-      </div>
-      <span class="health-pill" id="sync-status" aria-live="polite">Loading data</span>
-    </div>
-    <dl class="database-grid">
-      <div>
-        <dt>Database file</dt>
-        <dd id="db-file">Checking...</dd>
-      </div>
-      <div>
-        <dt>Tables</dt>
-        <dd id="db-table-count">-</dd>
-      </div>
-      <div>
-        <dt>Transactions</dt>
-        <dd id="db-transaction-count">-</dd>
-      </div>
-      <div>
-        <dt>Budgets</dt>
-        <dd id="db-budget-count">-</dd>
-      </div>
-    </dl>
-    <div class="backend-stack" aria-label="Database quick actions">
-      <code>.\scripts\open_database.ps1</code>
-      <ul>
-        <li>Creates tables automatically</li>
-        <li>Seeds portfolio demo data</li>
-        <li>Works with DB Browser for SQLite</li>
-      </ul>
-    </div>
-    <p class="hero-note">Open this file in DB Browser for SQLite to view the live tables.</p>
-  </aside>
-</section>
-
-<section class="shell metrics-grid" aria-labelledby="overview-title">
-  <h2 class="sr-only" id="overview-title">Financial overview</h2>
-  <article class="metric-card">
-    <span class="metric-label">Income</span>
-    <strong id="metric-income">$0.00</strong>
-    <small>Total money in</small>
-  </article>
-  <article class="metric-card">
-    <span class="metric-label">Expenses</span>
-    <strong id="metric-expenses">$0.00</strong>
-    <small>Total money out</small>
-  </article>
-  <article class="metric-card metric-card-accent">
-    <span class="metric-label">Net cashflow</span>
-    <strong id="metric-net">$0.00</strong>
-    <small>Income minus expenses</small>
-  </article>
-  <article class="metric-card">
-    <span class="metric-label">Savings rate</span>
-    <strong id="metric-savings-rate">0%</strong>
-    <small id="metric-transaction-count">0 transactions</small>
-  </article>
-</section>
-
-<main class="shell dashboard-grid" aria-labelledby="page-title">
-  <section class="panel form-panel" aria-labelledby="transaction-form-title">
-    <div class="panel-heading">
-      <div>
-        <p class="section-kicker">Quick add</p>
-        <h2 id="transaction-form-title">New transaction</h2>
-      </div>
-      <span class="panel-badge">REST API</span>
-    </div>
-
-    <form id="transaction-form" novalidate>
-      <div class="segmented-control" role="radiogroup" aria-label="Transaction type">
-        <label>
-          <input type="radio" name="kind" value="expense" checked>
-          <span>Expense</span>
-        </label>
-        <label>
-          <input type="radio" name="kind" value="income">
-          <span>Income</span>
-        </label>
-      </div>
-
-      <div class="form-field">
-        <label for="description">Description</label>
-        <input id="description" name="description" type="text" maxlength="140" autocomplete="off" placeholder="Rent, salary, groceries" required>
-        <p class="field-error" data-error-for="description"></p>
-      </div>
-
-      <div class="form-row">
-        <div class="form-field">
-          <label for="amount">Amount</label>
-          <input id="amount" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" required>
-          <p class="field-error" data-error-for="amount"></p>
-        </div>
-        <div class="form-field">
-          <label for="occurred_on">Date</label>
-          <input id="occurred_on" name="occurred_on" type="date" required>
-          <p class="field-error" data-error-for="occurred_on"></p>
-        </div>
-      </div>
-
-      <div class="form-field">
-        <label for="category">Category</label>
-        <input id="category" name="category" type="text" list="category-options" maxlength="80" placeholder="Food" required>
-        <datalist id="category-options"></datalist>
-        <p class="field-error" data-error-for="category"></p>
-      </div>
-
-      <div class="form-field">
-        <label for="notes">Notes <span class="optional-label">Optional</span></label>
-        <textarea id="notes" name="notes" rows="3" maxlength="280" placeholder="Add context for future analysis"></textarea>
-        <p class="field-error" data-error-for="notes"></p>
-      </div>
-
-      <button class="button button-primary button-full" type="submit" id="save-transaction-button">Save transaction</button>
-    </form>
+    <figure class="finance-visual">
+      <img src="{{ url_for('static', filename='img/finance-hero.svg') }}" alt="Illustration of a budgeting workspace with a chart, card and savings jar">
+      <figcaption>Plan your month without the clutter.</figcaption>
+    </figure>
   </section>
 
-  <section class="panel chart-panel wide-panel" aria-labelledby="cashflow-title">
-    <div class="panel-heading">
-      <div>
-        <p class="section-kicker">Trend</p>
-        <h2 id="cashflow-title">Monthly cashflow</h2>
-      </div>
-      <span class="panel-badge">Chart.js</span>
+  <section class="shell welcome-strip" aria-label="Finance Tracker highlights">
+    <div>
+      <strong>Track</strong>
+      <span>Log income and expenses in seconds.</span>
     </div>
-    <p class="sr-only" id="cashflow-summary-text">Cashflow chart is loading.</p>
-    <div class="chart-wrap">
-      <canvas id="cashflow-chart" aria-describedby="cashflow-summary-text"></canvas>
+    <div>
+      <strong>Understand</strong>
+      <span>See trends without digging through rows.</span>
     </div>
-  </section>
-
-  <section class="panel budget-panel" aria-labelledby="budget-title">
-    <div class="panel-heading">
-      <div>
-        <p class="section-kicker">Monthly guardrails</p>
-        <h2 id="budget-title">Budget control</h2>
-      </div>
-    </div>
-    <form id="budget-form" class="budget-form" novalidate>
-      <div class="form-field">
-        <label for="budget-category">Category</label>
-        <input id="budget-category" name="category" type="text" list="category-options" maxlength="80" placeholder="Food" required>
-        <p class="field-error" data-error-for="budget-category"></p>
-      </div>
-      <div class="form-field">
-        <label for="budget-limit">Monthly limit</label>
-        <input id="budget-limit" name="monthly_limit" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="300.00" required>
-        <p class="field-error" data-error-for="monthly_limit"></p>
-      </div>
-      <button class="button button-secondary button-full" type="submit" id="save-budget-button">Save budget</button>
-    </form>
-    <div id="budget-list" class="budget-list" aria-live="polite"></div>
-  </section>
-
-  <section class="panel chart-panel category-panel" aria-labelledby="category-title">
-    <div class="panel-heading">
-      <div>
-        <p class="section-kicker">Spend mix</p>
-        <h2 id="category-title">Category breakdown</h2>
-      </div>
-    </div>
-    <p class="sr-only" id="category-summary-text">Category chart is loading.</p>
-    <div class="chart-wrap chart-wrap-small">
-      <canvas id="category-chart" aria-describedby="category-summary-text"></canvas>
-    </div>
-  </section>
-
-  <section class="panel db-panel" aria-labelledby="backend-title">
-    <div class="panel-heading">
-      <div>
-        <p class="section-kicker">Database</p>
-        <h2 id="backend-title">Backend tables</h2>
-      </div>
-    </div>
-    <div class="db-table-list" id="db-table-list" aria-live="polite">
-      <p class="empty-state">Loading database tables...</p>
-    </div>
-  </section>
-
-  <section class="panel table-panel wide-panel" aria-labelledby="transactions-title">
-    <div class="panel-heading table-heading">
-      <div>
-        <p class="section-kicker">Ledger</p>
-        <h2 id="transactions-title">Transactions</h2>
-      </div>
-      <form id="filter-form" class="filter-form" aria-label="Filter transactions">
-        <fieldset class="filter-kind-field">
-          <legend>Type</legend>
-          <div class="filter-kind-group">
-            <label>
-              <input type="radio" name="kind" value="" checked>
-              <span>All</span>
-            </label>
-            <label>
-              <input type="radio" name="kind" value="income">
-              <span>Income</span>
-            </label>
-            <label>
-              <input type="radio" name="kind" value="expense">
-              <span>Expense</span>
-            </label>
-          </div>
-        </fieldset>
-        <label>
-          <span>Start</span>
-          <input id="filter-start" name="start" type="date">
-        </label>
-        <label>
-          <span>End</span>
-          <input id="filter-end" name="end" type="date">
-        </label>
-        <button class="button button-ghost" type="submit">Apply</button>
-        <button class="button button-text" type="button" id="clear-filters-button">Clear</button>
-      </form>
-    </div>
-
-    <div class="table-wrap">
-      <table>
-        <caption>Income and expense transaction ledger</caption>
-        <thead>
-          <tr>
-            <th scope="col">Date</th>
-            <th scope="col">Description</th>
-            <th scope="col">Category</th>
-            <th scope="col">Type</th>
-            <th scope="col" class="amount-cell">Amount</th>
-            <th scope="col">Action</th>
-          </tr>
-        </thead>
-        <tbody id="transaction-rows">
-          <tr>
-            <td colspan="6" class="empty-cell">Loading transactions...</td>
-          </tr>
-        </tbody>
-      </table>
+    <div>
+      <strong>Plan</strong>
+      <span>Set monthly limits for the categories that matter.</span>
     </div>
   </section>
 </main>
-
-<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-  window.FINANCE_TRACKER = { currency: "{{ currency_code }}" };
-</script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
-<script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
 {% endblock %}

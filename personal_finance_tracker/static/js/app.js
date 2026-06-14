@@ -105,12 +105,18 @@ function updateMetrics(summary) {
 }
 
 function chartDefaults() {
+  const cssValue = (name, fallback) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
   return {
-    color: getComputedStyle(document.documentElement).getPropertyValue("--color-muted").trim() || "#667085",
+    color: cssValue("--color-muted", "#69766c"),
+    green: cssValue("--color-green", "#006b4f"),
+    pink: cssValue("--color-pink", "#9b2367"),
+    blue: cssValue("--color-blue", "#2f5f98"),
+    yellow: cssValue("--color-yellow", "#ffd43b"),
+    surface: cssValue("--color-canvas", "#fffdf4"),
     font: {
-      family: "Aptos, Segoe UI Variable, Segoe UI, system-ui, sans-serif",
+      family: "Arial, Segoe UI Variable, Segoe UI, system-ui, sans-serif",
     },
-    grid: "rgba(17, 24, 39, 0.08)",
+    grid: "rgba(31, 36, 31, 0.1)",
   };
 }
 
@@ -135,6 +141,9 @@ function renderCashflowChart(monthly) {
     state.cashflowChart.data.datasets[0].data = income;
     state.cashflowChart.data.datasets[1].data = expenses;
     state.cashflowChart.data.datasets[2].data = net;
+    state.cashflowChart.data.datasets[0].backgroundColor = defaults.green;
+    state.cashflowChart.data.datasets[1].backgroundColor = defaults.pink;
+    state.cashflowChart.data.datasets[2].borderColor = defaults.blue;
     state.cashflowChart.options.scales.x.grid.color = defaults.grid;
     state.cashflowChart.options.scales.y.grid.color = defaults.grid;
     state.cashflowChart.update("none");
@@ -147,8 +156,8 @@ function renderCashflowChart(monthly) {
             type: "bar",
             label: "Income",
             data: income,
-            backgroundColor: "rgba(13, 107, 77, 0.78)",
-            borderRadius: 9,
+            backgroundColor: defaults.green,
+            borderRadius: 0,
             borderSkipped: false,
             maxBarThickness: 38,
           },
@@ -156,8 +165,8 @@ function renderCashflowChart(monthly) {
             type: "bar",
             label: "Expenses",
             data: expenses,
-            backgroundColor: "rgba(194, 65, 72, 0.62)",
-            borderRadius: 9,
+            backgroundColor: defaults.pink,
+            borderRadius: 0,
             borderSkipped: false,
             maxBarThickness: 38,
           },
@@ -165,8 +174,8 @@ function renderCashflowChart(monthly) {
             type: "line",
             label: "Net",
             data: net,
-            borderColor: "#244ed8",
-            backgroundColor: "rgba(36, 78, 216, 0.12)",
+            borderColor: defaults.blue,
+            backgroundColor: "rgba(47, 95, 152, 0.12)",
             borderWidth: 3,
             pointRadius: 3,
             pointHoverRadius: 5,
@@ -217,9 +226,9 @@ function renderCategoryChart(categories) {
   const hasData = categories.length > 0;
   const labels = hasData ? categories.map((item) => item.category) : ["No expenses yet"];
   const values = hasData ? categories.map((item) => item.amount) : [1];
-  const palette = ["#0d6b4d", "#244ed8", "#c24148", "#b7791f", "#6d5bd0", "#2f8f9d", "#9f3a5f", "#8a97a9"];
-  const surfaceColor =
-    getComputedStyle(document.documentElement).getPropertyValue("--color-surface").trim() || "#ffffff";
+  const defaults = chartDefaults();
+  const palette = [defaults.green, defaults.pink, defaults.blue, "#7d6420", "#587569", "#6f4b78", "#9d5733", "#8b938d"];
+  const surfaceColor = defaults.surface;
 
   if (state.categoryChart) {
     state.categoryChart.data.labels = labels;

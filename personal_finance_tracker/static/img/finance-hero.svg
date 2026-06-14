@@ -1,0 +1,32 @@
+<svg width="1180" height="820" viewBox="0 0 1180 820" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Finance dashboard illustration</title>
+  <desc id="desc">A polished finance workspace with charts, a payment card, savings jar and transaction notes.</desc>
+  <rect width="1180" height="820" rx="56" fill="#151724"/>
+  <path d="M0 610C154 536 274 574 402 624C551 682 669 675 820 595C939 532 1053 514 1180 557V820H0V610Z" fill="#1D2F5F"/>
+  <circle cx="955" cy="143" r="188" fill="#2C58D7" fill-opacity="0.32"/>
+  <circle cx="160" cy="660" r="196" fill="#D72675" fill-opacity="0.25"/>
+  <rect x="92" y="86" width="650" height="464" rx="34" fill="#F7F4EF"/>
+  <rect x="132" y="132" width="226" height="24" rx="12" fill="#171923"/>
+  <rect x="132" y="184" width="520" height="18" rx="9" fill="#D9D4CC"/>
+  <rect x="132" y="226" width="442" height="18" rx="9" fill="#D9D4CC"/>
+  <rect x="132" y="302" width="84" height="170" rx="12" fill="#D72675"/>
+  <rect x="248" y="246" width="84" height="226" rx="12" fill="#2C58D7"/>
+  <rect x="364" y="344" width="84" height="128" rx="12" fill="#7A1F2D"/>
+  <rect x="480" y="212" width="84" height="260" rx="12" fill="#111827"/>
+  <path d="M132 472H612" stroke="#BDB6AE" stroke-width="5" stroke-linecap="round"/>
+  <rect x="778" y="172" width="292" height="190" rx="28" fill="#FFFFFF"/>
+  <rect x="814" y="218" width="134" height="18" rx="9" fill="#111827"/>
+  <rect x="814" y="262" width="214" height="16" rx="8" fill="#D7D0C8"/>
+  <rect x="814" y="300" width="170" height="16" rx="8" fill="#D7D0C8"/>
+  <circle cx="1018" cy="232" r="26" fill="#D72675"/>
+  <circle cx="1044" cy="232" r="26" fill="#2C58D7" fill-opacity="0.92"/>
+  <rect x="782" y="424" width="294" height="210" rx="30" fill="#F7F4EF"/>
+  <path d="M930 580C996 580 1050 526 1050 460H1010C1010 504 974 540 930 540C886 540 850 504 850 460H810C810 526 864 580 930 580Z" fill="#D72675"/>
+  <path d="M850 460C850 416 886 380 930 380C974 380 1010 416 1010 460H1050C1050 394 996 340 930 340C864 340 810 394 810 460H850Z" fill="#2C58D7"/>
+  <rect x="135" y="600" width="310" height="96" rx="24" fill="#FFFFFF"/>
+  <rect x="171" y="632" width="130" height="16" rx="8" fill="#171923"/>
+  <rect x="171" y="664" width="218" height="14" rx="7" fill="#CAC3BC"/>
+  <rect x="493" y="600" width="230" height="96" rx="24" fill="#D72675"/>
+  <rect x="531" y="632" width="110" height="16" rx="8" fill="#FFFFFF"/>
+  <rect x="531" y="664" width="148" height="14" rx="7" fill="#F6B8D3"/>
+</svg>

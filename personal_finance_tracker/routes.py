@@ -23,8 +23,13 @@ api_bp = Blueprint("api", __name__, url_prefix="/api")
 
 
 @ui_bp.get("/")
+def welcome():
+    return render_template("index.html")
+
+
+@ui_bp.get("/dashboard")
 def dashboard():
-    return render_template("index.html", currency_code=current_app.config.get("CURRENCY_CODE", "USD"))
+    return render_template("dashboard.html", currency_code=current_app.config.get("CURRENCY_CODE", "USD"))
 
 
 @api_bp.get("/health")
