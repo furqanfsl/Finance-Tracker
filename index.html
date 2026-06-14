@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Open Finance Tracker</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f5f7fb;
+        --panel: #ffffff;
+        --panel-strong: #f8fbff;
+        --text: #101828;
+        --muted: #5f6f89;
+        --line: #dbe3ef;
+        --brand: #116b5f;
+        --brand-strong: #0c5148;
+        --brand-soft: #dff5f0;
+        --warning: #8a4b0f;
+        --warning-soft: #fff4df;
+        --shadow: 0 24px 70px rgba(23, 37, 84, 0.12);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1117;
+          --panel: #151b23;
+          --panel-strong: #111820;
+          --text: #f2f6fb;
+          --muted: #9ba8ba;
+          --line: #273241;
+          --brand: #6ee7d2;
+          --brand-strong: #a7f3e5;
+          --brand-soft: rgba(45, 212, 191, 0.13);
+          --warning: #ffd699;
+          --warning-soft: rgba(245, 158, 11, 0.13);
+          --shadow: 0 24px 70px rgba(0, 0, 0, 0.36);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 32px 18px;
+        background:
+          radial-gradient(circle at 12% 12%, rgba(17, 107, 95, 0.14), transparent 28rem),
+          radial-gradient(circle at 86% 8%, rgba(69, 118, 255, 0.12), transparent 24rem),
+          var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      main {
+        width: min(100%, 880px);
+      }
+
+      .card {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .hero {
+        display: grid;
+        gap: 24px;
+        padding: clamp(28px, 6vw, 56px);
+      }
+
+      .eyebrow {
+        width: fit-content;
+        margin: 0;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--brand-soft);
+        color: var(--brand-strong);
+        font-size: 0.82rem;
+        font-weight: 750;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        max-width: 13ch;
+        margin: 0;
+        font-size: clamp(2.55rem, 8vw, 5.4rem);
+        line-height: 0.94;
+        letter-spacing: -0.07em;
+      }
+
+      .lead {
+        max-width: 66ch;
+        margin: 0;
+        color: var(--muted);
+        font-size: clamp(1rem, 2vw, 1.14rem);
+        line-height: 1.7;
+      }
+
+      .status {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--panel-strong);
+      }
+
+      .status-dot {
+        width: 12px;
+        height: 12px;
+        margin-top: 6px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        background: var(--warning);
+        box-shadow: 0 0 0 5px var(--warning-soft);
+      }
+
+      .status.is-online .status-dot {
+        background: var(--brand);
+        box-shadow: 0 0 0 5px var(--brand-soft);
+      }
+
+      .status strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .status p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .button {
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        padding: 0 18px;
+        font: inherit;
+        font-weight: 800;
+        color: #ffffff;
+        background: var(--brand);
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .button.secondary {
+        color: var(--text);
+        background: transparent;
+        border-color: var(--line);
+      }
+
+      .button:hover {
+        transform: translateY(-1px);
+      }
+
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1px;
+        border-top: 1px solid var(--line);
+        background: var(--line);
+      }
+
+      .step {
+        min-height: 144px;
+        padding: 24px;
+        background: var(--panel-strong);
+      }
+
+      .step span {
+        display: inline-grid;
+        width: 28px;
+        height: 28px;
+        place-items: center;
+        margin-bottom: 16px;
+        border-radius: 50%;
+        color: var(--brand-strong);
+        background: var(--brand-soft);
+        font-size: 0.9rem;
+        font-weight: 850;
+      }
+
+      .step h2 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+      }
+
+      .step p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      code {
+        display: inline-block;
+        padding: 3px 7px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--text);
+        background: var(--panel);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+      }
+
+      @media (max-width: 720px) {
+        body {
+          place-items: start center;
+        }
+
+        h1 {
+          max-width: 10ch;
+        }
+
+        .steps {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">VS Code Go Live helper</p>
+        <h1 id="page-title">Open the real app.</h1>
+        <p class="lead">
+          Go Live serves static files on port 5500. Finance Tracker is a Flask
+          and SQLite app, so the working website runs from the Python server on
+          <strong>http://127.0.0.1:5000</strong>.
+        </p>
+
+        <div id="status" class="status" role="status" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <div>
+            <strong id="status-title">Checking the Flask server...</strong>
+            <p id="status-copy">
+              If it is already running, this page will open the dashboard automatically.
+            </p>
+          </div>
+        </div>
+
+        <div class="actions" aria-label="Actions">
+          <a class="button" href="http://127.0.0.1:5000/">Open dashboard</a>
+          <button class="button secondary" type="button" id="copy-command">
+            Copy start command
+          </button>
+        </div>
+      </section>
+
+      <section class="steps" aria-label="How to start the app">
+        <article class="step">
+          <span>1</span>
+          <h2>Start Flask</h2>
+          <p>Run <code>.\start.bat</code> from the project folder.</p>
+        </article>
+        <article class="step">
+          <span>2</span>
+          <h2>Wait for port 5000</h2>
+          <p>The script installs dependencies, starts Flask, and opens the app.</p>
+        </article>
+        <article class="step">
+          <span>3</span>
+          <h2>Use Go Live safely</h2>
+          <p>This page now redirects to the real dashboard instead of showing folders.</p>
+        </article>
+      </section>
+    </main>
+
+    <noscript>
+      <p>
+        JavaScript is off. Start Flask with <code>.\start.bat</code>, then open
+        <a href="http://127.0.0.1:5000/">http://127.0.0.1:5000/</a>.
+      </p>
+    </noscript>
+
+    <script>
+      const appUrl = "http://127.0.0.1:5000/";
+      const statusBox = document.getElementById("status");
+      const statusTitle = document.getElementById("status-title");
+      const statusCopy = document.getElementById("status-copy");
+      const copyButton = document.getElementById("copy-command");
+      let redirected = false;
+
+      function setStatus(isOnline, title, copy) {
+        statusBox.classList.toggle("is-online", isOnline);
+        statusTitle.textContent = title;
+        statusCopy.textContent = copy;
+      }
+
+      function checkFlaskServer() {
+        if (redirected) return;
+
+        const probe = new Image();
+        const timer = window.setTimeout(() => {
+          probe.onload = null;
+          probe.onerror = null;
+          setStatus(
+            false,
+            "Flask is not running yet.",
+            "Run .\\start.bat, then keep this page open. It will redirect when the server is ready."
+          );
+        }, 1200);
+
+        probe.onload = () => {
+          window.clearTimeout(timer);
+          redirected = true;
+          setStatus(true, "Flask is running.", "Opening the dashboard on port 5000...");
+          window.setTimeout(() => window.location.replace(appUrl), 350);
+        };
+
+        probe.onerror = () => {
+          window.clearTimeout(timer);
+          setStatus(
+            false,
+            "Flask is not running yet.",
+            "Run .\\start.bat, then keep this page open. It will redirect when the server is ready."
+          );
+        };
+
+        probe.src = `${appUrl}static/img/favicon.svg?probe=${Date.now()}`;
+      }
+
+      copyButton.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(".\\start.bat");
+          copyButton.textContent = "Copied";
+          window.setTimeout(() => {
+            copyButton.textContent = "Copy start command";
+          }, 1800);
+        } catch {
+          copyButton.textContent = "Run .\\start.bat";
+        }
+      });
+
+      checkFlaskServer();
+      window.setInterval(checkFlaskServer, 3000);
+    </script>
+  </body>
+</html>

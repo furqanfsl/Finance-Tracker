@@ -19,5 +19,6 @@ class Config:
         if configured_uri:
             return configured_uri
 
-        db_path = Path(app_instance_path) / "finance_tracker.sqlite3"
+        project_root = Path(app_instance_path).resolve().parent
+        db_path = project_root / "financial.db"
         return f"sqlite:///{db_path.as_posix()}"

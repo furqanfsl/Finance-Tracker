@@ -6,6 +6,10 @@ const state = {
   categoryChart: null,
   transactions: [],
   categories: { income: [], expense: [] },
+  databaseFingerprint: null,
+  loading: false,
+  filterDebounce: null,
+  pollTimer: null,
 };
 
 const formatter = new Intl.NumberFormat(undefined, {
@@ -66,6 +70,7 @@ function showToast(message) {
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
     headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    cache: "no-store",
     ...options,
   });
   const payload = await response.json().catch(() => ({}));
@@ -122,73 +127,79 @@ function renderCashflowChart(monthly) {
   const net = monthly.map((item) => item.net);
   const defaults = chartDefaults();
 
-  if (state.cashflowChart) {
-    state.cashflowChart.destroy();
-  }
-
   window.Chart.defaults.color = defaults.color;
   window.Chart.defaults.font.family = defaults.font.family;
 
-  state.cashflowChart = new window.Chart(document.querySelector("#cashflow-chart"), {
-    data: {
-      labels,
-      datasets: [
-        {
-          type: "bar",
-          label: "Income",
-          data: income,
-          backgroundColor: "rgba(13, 107, 77, 0.78)",
-          borderRadius: 9,
-          borderSkipped: false,
-          maxBarThickness: 38,
+  if (state.cashflowChart) {
+    state.cashflowChart.data.labels = labels;
+    state.cashflowChart.data.datasets[0].data = income;
+    state.cashflowChart.data.datasets[1].data = expenses;
+    state.cashflowChart.data.datasets[2].data = net;
+    state.cashflowChart.options.scales.x.grid.color = defaults.grid;
+    state.cashflowChart.options.scales.y.grid.color = defaults.grid;
+    state.cashflowChart.update("none");
+  } else {
+    state.cashflowChart = new window.Chart(document.querySelector("#cashflow-chart"), {
+      data: {
+        labels,
+        datasets: [
+          {
+            type: "bar",
+            label: "Income",
+            data: income,
+            backgroundColor: "rgba(13, 107, 77, 0.78)",
+            borderRadius: 9,
+            borderSkipped: false,
+            maxBarThickness: 38,
+          },
+          {
+            type: "bar",
+            label: "Expenses",
+            data: expenses,
+            backgroundColor: "rgba(194, 65, 72, 0.62)",
+            borderRadius: 9,
+            borderSkipped: false,
+            maxBarThickness: 38,
+          },
+          {
+            type: "line",
+            label: "Net",
+            data: net,
+            borderColor: "#244ed8",
+            backgroundColor: "rgba(36, 78, 216, 0.12)",
+            borderWidth: 3,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            tension: 0.36,
+            fill: false,
+          },
+        ],
+      },
+      options: {
+        animation: false,
+        maintainAspectRatio: false,
+        responsive: true,
+        resizeDelay: 120,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { labels: { usePointStyle: true, boxWidth: 9, boxHeight: 9 } },
+          tooltip: {
+            callbacks: {
+              label: (context) => `${context.dataset.label}: ${money(context.parsed.y)}`,
+            },
+          },
         },
-        {
-          type: "bar",
-          label: "Expenses",
-          data: expenses,
-          backgroundColor: "rgba(194, 65, 72, 0.62)",
-          borderRadius: 9,
-          borderSkipped: false,
-          maxBarThickness: 38,
-        },
-        {
-          type: "line",
-          label: "Net",
-          data: net,
-          borderColor: "#244ed8",
-          backgroundColor: "rgba(36, 78, 216, 0.12)",
-          borderWidth: 3,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          tension: 0.36,
-          fill: false,
-        },
-      ],
-    },
-    options: {
-      animation: false,
-      maintainAspectRatio: false,
-      responsive: true,
-      resizeDelay: 120,
-      interaction: { mode: "index", intersect: false },
-      plugins: {
-        legend: { labels: { usePointStyle: true, boxWidth: 9, boxHeight: 9 } },
-        tooltip: {
-          callbacks: {
-            label: (context) => `${context.dataset.label}: ${money(context.parsed.y)}`,
+        scales: {
+          x: { grid: { color: defaults.grid } },
+          y: {
+            beginAtZero: true,
+            grid: { color: defaults.grid },
+            ticks: { callback: (value) => money(value) },
           },
         },
       },
-      scales: {
-        x: { grid: { color: defaults.grid } },
-        y: {
-          beginAtZero: true,
-          grid: { color: defaults.grid },
-          ticks: { callback: (value) => money(value) },
-        },
-      },
-    },
-  });
+    });
+  }
 
   const latest = monthly.at(-1);
   summaryText.textContent = latest
@@ -203,45 +214,54 @@ function renderCategoryChart(categories) {
     return;
   }
 
-  if (state.categoryChart) {
-    state.categoryChart.destroy();
-  }
-
   const hasData = categories.length > 0;
   const labels = hasData ? categories.map((item) => item.category) : ["No expenses yet"];
   const values = hasData ? categories.map((item) => item.amount) : [1];
   const palette = ["#0d6b4d", "#244ed8", "#c24148", "#b7791f", "#6d5bd0", "#2f8f9d", "#9f3a5f", "#8a97a9"];
+  const surfaceColor =
+    getComputedStyle(document.documentElement).getPropertyValue("--color-surface").trim() || "#ffffff";
 
-  state.categoryChart = new window.Chart(document.querySelector("#category-chart"), {
-    type: "doughnut",
-    data: {
-      labels,
-      datasets: [
-        {
-          data: values,
-          backgroundColor: labels.map((_, index) => (hasData ? palette[index % palette.length] : "#d8ded7")),
-          borderColor: "#ffffff",
-          borderWidth: 4,
-          hoverOffset: hasData ? 6 : 0,
-        },
-      ],
-    },
-    options: {
-      animation: false,
-      maintainAspectRatio: false,
-      responsive: true,
-      resizeDelay: 120,
-      cutout: "70%",
-      plugins: {
-        legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 9, boxHeight: 9 } },
-        tooltip: {
-          callbacks: {
-            label: (context) => (hasData ? `${context.label}: ${money(context.parsed)}` : "No expense data yet"),
+  if (state.categoryChart) {
+    state.categoryChart.data.labels = labels;
+    state.categoryChart.data.datasets[0].data = values;
+    state.categoryChart.data.datasets[0].backgroundColor = labels.map((_, index) =>
+      hasData ? palette[index % palette.length] : "#d8ded7",
+    );
+    state.categoryChart.data.datasets[0].borderColor = surfaceColor;
+    state.categoryChart.data.datasets[0].hoverOffset = hasData ? 6 : 0;
+    state.categoryChart.update("none");
+  } else {
+    state.categoryChart = new window.Chart(document.querySelector("#category-chart"), {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [
+          {
+            data: values,
+            backgroundColor: labels.map((_, index) => (hasData ? palette[index % palette.length] : "#d8ded7")),
+            borderColor: surfaceColor,
+            borderWidth: 4,
+            hoverOffset: hasData ? 6 : 0,
+          },
+        ],
+      },
+      options: {
+        animation: false,
+        maintainAspectRatio: false,
+        responsive: true,
+        resizeDelay: 120,
+        cutout: "70%",
+        plugins: {
+          legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 9, boxHeight: 9 } },
+          tooltip: {
+            callbacks: {
+              label: (context) => (hasData ? `${context.label}: ${money(context.parsed)}` : "No expense data yet"),
+            },
           },
         },
       },
-    },
-  });
+    });
+  }
 
   const top = categories[0];
   summaryText.textContent = top
@@ -313,6 +333,7 @@ function renderDatabaseStatus(database) {
   selectors.dbTableCount.textContent = `${tables.length}`;
   selectors.dbTransactionCount.textContent = `${transactionTable?.row_count ?? 0}`;
   selectors.dbBudgetCount.textContent = `${budgetTable?.row_count ?? 0}`;
+  state.databaseFingerprint = database.fingerprint || state.databaseFingerprint;
 
   selectors.dbTableList.innerHTML = tables.length
     ? tables
@@ -364,11 +385,17 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-async function loadDashboard() {
+async function loadDashboard({ silent = false } = {}) {
+  if (state.loading) return;
+
   const query = buildFilterQuery();
   const suffix = query ? `?${query}` : "";
-  setStatus("Loading");
-  selectors.refreshButton.disabled = true;
+  state.loading = true;
+
+  if (!silent) {
+    setStatus("Loading");
+    selectors.refreshButton.disabled = true;
+  }
 
   try {
     const [summary, transactionPayload, databasePayload] = await Promise.all([
@@ -385,13 +412,49 @@ async function loadDashboard() {
     renderBudgets(summary.budgets || []);
     renderTransactions(transactionPayload.transactions || []);
     renderDatabaseStatus(databasePayload.database || {});
-    setStatus("Up to date");
+    setStatus(silent ? "Live updated" : "Up to date");
   } catch (error) {
     setStatus("Needs attention");
     showToast(error.error || "Something went wrong while loading data.");
   } finally {
-    selectors.refreshButton.disabled = false;
+    state.loading = false;
+    if (!silent) {
+      selectors.refreshButton.disabled = false;
+    }
   }
+}
+
+function scheduleFilterReload() {
+  window.clearTimeout(state.filterDebounce);
+  state.filterDebounce = window.setTimeout(() => loadDashboard(), 220);
+}
+
+async function pollForExternalChanges() {
+  if (document.visibilityState === "hidden" || state.loading) return;
+
+  try {
+    const payload = await apiFetch("/api/database");
+    const database = payload.database || {};
+    const fingerprint = database.fingerprint;
+
+    if (!fingerprint) return;
+
+    if (!state.databaseFingerprint) {
+      renderDatabaseStatus(database);
+      return;
+    }
+
+    if (fingerprint !== state.databaseFingerprint) {
+      await loadDashboard({ silent: true });
+    }
+  } catch {
+    setStatus("Waiting for database");
+  }
+}
+
+function startLivePolling() {
+  window.clearInterval(state.pollTimer);
+  state.pollTimer = window.setInterval(pollForExternalChanges, 4000);
 }
 
 function payloadFromTransactionForm() {
@@ -543,11 +606,12 @@ function bindEvents() {
     event.preventDefault();
     loadDashboard();
   });
+  selectors.filterForm.addEventListener("change", scheduleFilterReload);
   selectors.clearFiltersButton.addEventListener("click", () => {
     selectors.filterForm.reset();
     loadDashboard();
   });
-  selectors.refreshButton.addEventListener("click", loadDashboard);
+  selectors.refreshButton.addEventListener("click", () => loadDashboard());
   selectors.exportButton.addEventListener("click", exportCsv);
   selectors.transactionRows.addEventListener("click", handleTransactionDelete);
   selectors.budgetList.addEventListener("click", handleBudgetDelete);
@@ -558,4 +622,4 @@ function bindEvents() {
 
 setDefaultDate();
 bindEvents();
-loadDashboard();
+loadDashboard().then(startLivePolling);

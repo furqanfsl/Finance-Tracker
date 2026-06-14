@@ -53,6 +53,16 @@ uv run flask --app run.py run --debug
 
 Then open <http://127.0.0.1:5000>.
 
+### VS Code Go Live
+
+This is a Flask + SQLite app, so the real dashboard must run from the Python
+server on <http://127.0.0.1:5000>. VS Code's **Go Live** button starts a static
+file server on port `5500`; it cannot run Flask by itself.
+
+The root `index.html` is included only as a Go Live helper. It replaces the
+folder listing, explains the correct startup command, and redirects to
+<http://127.0.0.1:5000> once `start.bat` / Flask is running.
+
 ## Tests
 
 ```powershell
@@ -61,7 +71,11 @@ uv run pytest
 
 ## SQLite database
 
-The app creates and seeds `instance/finance_tracker.sqlite3` automatically. To initialize it yourself:
+The app creates and seeds `financial.db` in the project root automatically. This
+is the same file DB Browser for SQLite should open while the Flask app is
+running.
+
+To initialize it yourself:
 
 ```powershell
 .\scripts\init_database.ps1
@@ -82,7 +96,7 @@ Copy `.env.example` to `.env` if you want to customize local settings.
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `SECRET_KEY` | `dev` | Flask secret key for local development |
-| `DATABASE_URL` | `sqlite:///instance/finance_tracker.sqlite3` | Database connection string |
+| `DATABASE_URL` | `sqlite:///financial.db` | Database connection string |
 | `CURRENCY_CODE` | `USD` | Currency used by the dashboard formatter |
 | `AUTO_CREATE_DB` | `true` | Create tables automatically on app startup |
 | `SEED_SAMPLE_DATA` | `true` | Add demo records when the database is empty |

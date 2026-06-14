@@ -287,12 +287,15 @@ def database_overview() -> dict[str, Any]:
     inspector = inspect(engine)
     database_path = None
     database_size = 0
+    database_mtime_ns = 0
 
     if engine.url.drivername.startswith("sqlite") and engine.url.database:
         path = Path(engine.url.database).resolve()
         database_path = str(path)
         if path.exists():
-            database_size = path.stat().st_size
+            stat = path.stat()
+            database_size = stat.st_size
+            database_mtime_ns = stat.st_mtime_ns
 
     tables: list[dict[str, Any]] = []
     for table_name in sorted(inspector.get_table_names()):
@@ -300,10 +303,21 @@ def database_overview() -> dict[str, Any]:
         row_count = db.session.execute(text(f'SELECT COUNT(*) FROM "{safe_name}"')).scalar_one()
         tables.append({"name": table_name, "row_count": int(row_count)})
 
+    fingerprint = "|".join(
+        [
+            str(database_path or engine.url),
+            str(database_size),
+            str(database_mtime_ns),
+            ",".join(f"{table['name']}:{table['row_count']}" for table in tables),
+        ]
+    )
+
     return {
         "driver": engine.url.drivername,
         "path": database_path,
         "exists": bool(database_path and Path(database_path).exists()),
         "size_bytes": database_size,
+        "modified_at_ns": database_mtime_ns,
+        "fingerprint": fingerprint,
         "tables": tables,
     }

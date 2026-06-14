@@ -220,14 +220,23 @@
         <h2 id="transactions-title">Transactions</h2>
       </div>
       <form id="filter-form" class="filter-form" aria-label="Filter transactions">
-        <label>
-          <span>Type</span>
-          <select id="filter-kind" name="kind">
-            <option value="">All</option>
-            <option value="income">Income</option>
-            <option value="expense">Expense</option>
-          </select>
-        </label>
+        <fieldset class="filter-kind-field">
+          <legend>Type</legend>
+          <div class="filter-kind-group">
+            <label>
+              <input type="radio" name="kind" value="" checked>
+              <span>All</span>
+            </label>
+            <label>
+              <input type="radio" name="kind" value="income">
+              <span>Income</span>
+            </label>
+            <label>
+              <input type="radio" name="kind" value="expense">
+              <span>Expense</span>
+            </label>
+          </div>
+        </fieldset>
         <label>
           <span>Start</span>
           <input id="filter-start" name="start" type="date">

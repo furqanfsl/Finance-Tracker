@@ -663,16 +663,44 @@ textarea {
   background: #f7faf6;
   color: var(--color-ink);
   padding: 0.78rem 0.9rem;
+  accent-color: var(--color-accent);
   transition:
     border-color var(--transition-fluid),
     background var(--transition-fluid),
     box-shadow var(--transition-fluid);
 }
 
+select {
+  color-scheme: light;
+}
+
+select option,
+select optgroup {
+  background: #f7faf6;
+  color: var(--color-ink);
+}
+
+select option:checked {
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
 textarea {
   min-height: 94px;
   resize: vertical;
   line-height: 1.5;
+}
+
+input[type="date"] {
+  padding-right: 2.6rem;
+  background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 3v4M17 3v4M4.5 9.5h15M6.5 5.5h11a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2Z' stroke='%23111827' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-position: right 0.9rem center;
+  background-repeat: no-repeat;
+  background-size: 18px 18px;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
 }
 
 input::placeholder,
@@ -828,9 +856,73 @@ textarea:hover {
   justify-content: flex-end;
 }
 
+.filter-kind-field {
+  min-width: 248px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.filter-kind-field legend,
 .filter-form label {
   min-width: 140px;
   margin: 0;
+}
+
+.filter-kind-field legend {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--color-ink-soft);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.filter-kind-group {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  padding: 5px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+}
+
+.filter-kind-group label {
+  min-width: 0;
+  margin: 0;
+}
+
+.filter-kind-group input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.filter-kind-group span {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  font-weight: 850;
+  transition:
+    background var(--transition-fluid),
+    color var(--transition-fluid),
+    box-shadow var(--transition-fluid);
+}
+
+.filter-kind-group input:checked + span {
+  background: var(--color-ink);
+  color: var(--color-surface);
+  box-shadow: 0 10px 22px rgba(17, 24, 39, 0.16);
+}
+
+.filter-kind-group input:focus-visible + span {
+  outline: 3px solid rgba(36, 78, 216, 0.28);
+  outline-offset: 3px;
 }
 
 .filter-form select,
@@ -1035,6 +1127,29 @@ tbody tr:last-child td {
     background: var(--color-surface-raised);
   }
 
+  input,
+  textarea {
+    color-scheme: dark;
+  }
+
+  select {
+    color-scheme: dark;
+  }
+
+  select option,
+  select optgroup {
+    background: #172236;
+    color: #f6f8fb;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+  }
+
+  input[type="date"] {
+    background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 3v4M17 3v4M4.5 9.5h15M6.5 5.5h11a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2Z' stroke='%23d5deeb' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  }
+
   .segmented-control input:checked + span,
   .brand-mark {
     background: #f6f8fb;
@@ -1097,13 +1212,26 @@ tbody tr:last-child td {
   .hero-actions,
   .hero-actions .button,
   .filter-form,
+  .filter-kind-field,
+  .filter-kind-group,
   .filter-form label,
   .filter-form .button {
     width: 100%;
   }
 
   .topnav {
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  .topnav a {
+    text-align: center;
+  }
+
+  .header-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hero-grid {
@@ -1123,7 +1251,10 @@ tbody tr:last-child td {
   }
 
   h1 {
-    font-size: clamp(2.8rem, 13vw, 4rem);
+    max-width: 9.5ch;
+    font-size: clamp(2.55rem, 11.8vw, 3.45rem);
+    line-height: 0.96;
+    text-wrap: balance;
   }
 
   .hero-copy > p:not(.eyebrow) {
@@ -1133,6 +1264,11 @@ tbody tr:last-child td {
   .database-grid,
   .metrics-grid {
     grid-template-columns: 1fr;
+  }
+
+  .hero-card-top {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .dashboard-grid {

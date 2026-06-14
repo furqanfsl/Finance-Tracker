@@ -115,4 +115,6 @@ def test_database_status_endpoint(client):
 
     assert response.status_code == 200
     assert payload["exists"] is True
+    assert payload["fingerprint"]
+    assert payload["modified_at_ns"] > 0
     assert {table["name"] for table in payload["tables"]} == {"budgets", "transactions"}
