@@ -51,7 +51,8 @@ uv sync
 uv run flask --app run.py run --debug
 ```
 
-Then open <http://127.0.0.1:5000>.
+Then open <http://127.0.0.1:5000>. The welcome page links to the working
+dashboard at <http://127.0.0.1:5000/dashboard>.
 
 ### VS Code Go Live
 

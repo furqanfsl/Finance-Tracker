@@ -101,16 +101,16 @@ function updateMetrics(summary) {
 function chartDefaults() {
   const cssValue = (name, fallback) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
   return {
-    color: cssValue("--color-muted", "#69766c"),
-    green: cssValue("--color-green", "#006b4f"),
-    pink: cssValue("--color-pink", "#9b2367"),
-    blue: cssValue("--color-blue", "#2f5f98"),
-    yellow: cssValue("--color-yellow", "#ffd43b"),
-    surface: cssValue("--color-canvas", "#fffdf4"),
+    color: cssValue("--color-muted", "#676b78"),
+    income: cssValue("--color-blue", "#2554d8"),
+    expenses: cssValue("--color-red", "#76182c"),
+    net: cssValue("--color-pink", "#d82a7d"),
+    ink: cssValue("--color-navy", "#151724"),
+    surface: cssValue("--color-canvas", "#f3f0eb"),
     font: {
-      family: "Arial, Segoe UI Variable, Segoe UI, system-ui, sans-serif",
+      family: "Aptos, Segoe UI Variable, Segoe UI, system-ui, sans-serif",
     },
-    grid: "rgba(31, 36, 31, 0.1)",
+    grid: "rgba(21, 23, 36, 0.08)",
   };
 }
 
@@ -135,45 +135,50 @@ function renderCashflowChart(monthly) {
     state.cashflowChart.data.datasets[0].data = income;
     state.cashflowChart.data.datasets[1].data = expenses;
     state.cashflowChart.data.datasets[2].data = net;
-    state.cashflowChart.data.datasets[0].backgroundColor = defaults.green;
-    state.cashflowChart.data.datasets[1].backgroundColor = defaults.pink;
-    state.cashflowChart.data.datasets[2].borderColor = defaults.blue;
+    state.cashflowChart.data.datasets[0].borderColor = defaults.income;
+    state.cashflowChart.data.datasets[1].borderColor = defaults.expenses;
+    state.cashflowChart.data.datasets[2].borderColor = defaults.net;
     state.cashflowChart.options.scales.x.grid.color = defaults.grid;
     state.cashflowChart.options.scales.y.grid.color = defaults.grid;
     state.cashflowChart.update("none");
   } else {
     state.cashflowChart = new window.Chart(document.querySelector("#cashflow-chart"), {
+      type: "line",
       data: {
         labels,
         datasets: [
           {
-            type: "bar",
             label: "Income",
             data: income,
-            backgroundColor: defaults.green,
-            borderRadius: 0,
-            borderSkipped: false,
-            maxBarThickness: 38,
-          },
-          {
-            type: "bar",
-            label: "Expenses",
-            data: expenses,
-            backgroundColor: defaults.pink,
-            borderRadius: 0,
-            borderSkipped: false,
-            maxBarThickness: 38,
-          },
-          {
-            type: "line",
-            label: "Net",
-            data: net,
-            borderColor: defaults.blue,
-            backgroundColor: "rgba(47, 95, 152, 0.12)",
+            borderColor: defaults.income,
+            backgroundColor: "rgba(37, 84, 216, 0.08)",
             borderWidth: 3,
             pointRadius: 3,
-            pointHoverRadius: 5,
-            tension: 0.36,
+            pointHoverRadius: 6,
+            tension: 0.34,
+            fill: false,
+          },
+          {
+            label: "Expenses",
+            data: expenses,
+            borderColor: defaults.expenses,
+            backgroundColor: "rgba(118, 24, 44, 0.08)",
+            borderWidth: 3,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            tension: 0.34,
+            fill: false,
+          },
+          {
+            label: "Net",
+            data: net,
+            borderColor: defaults.net,
+            backgroundColor: "rgba(216, 42, 125, 0.08)",
+            borderWidth: 3,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            borderDash: [7, 6],
+            tension: 0.34,
             fill: false,
           },
         ],
@@ -193,7 +198,10 @@ function renderCashflowChart(monthly) {
           },
         },
         scales: {
-          x: { grid: { color: defaults.grid } },
+          x: {
+            grid: { color: defaults.grid },
+            ticks: { maxRotation: 0, autoSkipPadding: 18 },
+          },
           y: {
             beginAtZero: true,
             grid: { color: defaults.grid },
@@ -221,7 +229,7 @@ function renderCategoryChart(categories) {
   const labels = hasData ? categories.map((item) => item.category) : ["No expenses yet"];
   const values = hasData ? categories.map((item) => item.amount) : [1];
   const defaults = chartDefaults();
-  const palette = [defaults.green, defaults.pink, defaults.blue, "#7d6420", "#587569", "#6f4b78", "#9d5733", "#8b938d"];
+  const palette = [defaults.expenses, defaults.income, defaults.net, defaults.ink, "#5c6f9f", "#8f294f", "#7f8290", "#42627d"];
   const surfaceColor = defaults.surface;
 
   if (state.categoryChart) {
