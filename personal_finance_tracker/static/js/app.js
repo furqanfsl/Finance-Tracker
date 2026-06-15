@@ -308,14 +308,14 @@ function renderCategoryInsights(categories, budgets = []) {
     selectors.categoryBudgetGaps.innerHTML = `
       <div class="category-gap-heading">
         <p class="section-kicker">Next check</p>
-        <h3>Budget gaps</h3>
+        <h3>Set limits next</h3>
       </div>
       <p class="empty-state">Budget gaps will appear after you add expenses.</p>`;
     return;
   }
 
   selectors.categoryInsightsList.innerHTML = sortedCategories
-    .slice(0, 6)
+    .slice(0, 4)
     .map((item, index) => {
       const amount = Number(item.amount || 0);
       const share = total > 0 ? amount / total : 0;
@@ -344,22 +344,19 @@ function renderCategoryInsights(categories, budgets = []) {
   selectors.categoryBudgetGaps.innerHTML = `
     <div class="category-gap-heading">
       <p class="section-kicker">Next check</p>
-      <h3>Budget gaps</h3>
+      <h3>Set limits next</h3>
     </div>
     ${
       unbudgeted.length
-        ? unbudgeted
+        ? `<div class="category-gap-strip">${unbudgeted
             .map(
               (item) => `
-        <div class="category-gap-row">
-          <span>
-            <strong>${escapeHtml(item.category)}</strong>
-            <small>No monthly limit yet</small>
-          </span>
-          <strong>${money(item.amount)}</strong>
-        </div>`,
+        <span class="category-gap-row">
+          <strong>${escapeHtml(item.category)}</strong>
+          <em>${money(item.amount)}</em>
+        </span>`,
             )
-            .join("")
+            .join("")}</div>`
         : `<p class="empty-state">Every spending category currently has a monthly limit.</p>`
     }`;
 }
