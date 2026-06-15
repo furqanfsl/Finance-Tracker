@@ -36,6 +36,11 @@ const selectors = {
   categoryOptions: document.querySelector("#category-options"),
   transactionRows: document.querySelector("#transaction-rows"),
   budgetList: document.querySelector("#budget-list"),
+  categoryTotal: document.querySelector("#category-total"),
+  categoryTop: document.querySelector("#category-top"),
+  categoryInsightsSummary: document.querySelector("#category-insights-summary"),
+  categoryInsightsList: document.querySelector("#category-insights-list"),
+  categoryBudgetGaps: document.querySelector("#category-budget-gaps"),
   saveButton: document.querySelector("#save-transaction-button"),
   saveBudgetButton: document.querySelector("#save-budget-button"),
 };
@@ -112,6 +117,10 @@ function chartDefaults() {
     },
     grid: "rgba(21, 23, 36, 0.08)",
   };
+}
+
+function categoryPalette(defaults = chartDefaults()) {
+  return [defaults.expenses, defaults.income, defaults.net, defaults.ink, "#5c6f9f", "#8f294f", "#7f8290", "#42627d"];
 }
 
 function renderCashflowChart(monthly) {
@@ -229,7 +238,7 @@ function renderCategoryChart(categories) {
   const labels = hasData ? categories.map((item) => item.category) : ["No expenses yet"];
   const values = hasData ? categories.map((item) => item.amount) : [1];
   const defaults = chartDefaults();
-  const palette = [defaults.expenses, defaults.income, defaults.net, defaults.ink, "#5c6f9f", "#8f294f", "#7f8290", "#42627d"];
+  const palette = categoryPalette(defaults);
   const surfaceColor = defaults.surface;
 
   if (state.categoryChart) {
@@ -278,6 +287,81 @@ function renderCategoryChart(categories) {
   summaryText.textContent = top
     ? `Largest expense category is ${top.category} at ${money(top.amount)}.`
     : "No expense categories yet.";
+}
+
+function renderCategoryInsights(categories, budgets = []) {
+  if (!selectors.categoryInsightsList) return;
+
+  const sortedCategories = [...categories].sort((a, b) => Number(b.amount || 0) - Number(a.amount || 0));
+  const total = sortedCategories.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const top = sortedCategories[0];
+  const palette = categoryPalette();
+
+  selectors.categoryTotal.textContent = money(total);
+  selectors.categoryTop.textContent = top ? top.category : "None yet";
+  selectors.categoryInsightsSummary.textContent = top
+    ? `${top.category} makes up ${percentFormatter.format(total > 0 ? Number(top.amount || 0) / total : 0)} of your spending in this view.`
+    : "Add expenses to see where your spending is concentrated.";
+
+  if (!sortedCategories.length) {
+    selectors.categoryInsightsList.innerHTML = `<p class="empty-state">No expense data yet. Add an expense to see the top categories here.</p>`;
+    selectors.categoryBudgetGaps.innerHTML = `
+      <div class="category-gap-heading">
+        <p class="section-kicker">Next check</p>
+        <h3>Budget gaps</h3>
+      </div>
+      <p class="empty-state">Budget gaps will appear after you add expenses.</p>`;
+    return;
+  }
+
+  selectors.categoryInsightsList.innerHTML = sortedCategories
+    .slice(0, 6)
+    .map((item, index) => {
+      const amount = Number(item.amount || 0);
+      const share = total > 0 ? amount / total : 0;
+      const sharePercent = Math.round(share * 100);
+      const shareWidth = total > 0 ? Math.max(5, sharePercent) : 0;
+      const accent = palette[index % palette.length];
+      return `
+        <article class="category-insight-row" style="--category-accent: ${accent}; --category-share: ${shareWidth}%">
+          <div class="category-insight-main">
+            <span class="category-insight-name">${escapeHtml(item.category)}</span>
+            <strong class="category-insight-amount">${money(amount)}</strong>
+          </div>
+          <div class="category-share-track" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${sharePercent}" aria-label="${escapeHtml(item.category)} share of spending">
+            <span class="category-share-fill"></span>
+          </div>
+          <span class="category-share-label">${percentFormatter.format(share)} of spending</span>
+        </article>`;
+    })
+    .join("");
+
+  const budgetedCategories = new Set(budgets.map((budget) => String(budget.category || "").trim().toLowerCase()));
+  const unbudgeted = sortedCategories
+    .filter((item) => !budgetedCategories.has(String(item.category || "").trim().toLowerCase()))
+    .slice(0, 3);
+
+  selectors.categoryBudgetGaps.innerHTML = `
+    <div class="category-gap-heading">
+      <p class="section-kicker">Next check</p>
+      <h3>Budget gaps</h3>
+    </div>
+    ${
+      unbudgeted.length
+        ? unbudgeted
+            .map(
+              (item) => `
+        <div class="category-gap-row">
+          <span>
+            <strong>${escapeHtml(item.category)}</strong>
+            <small>No monthly limit yet</small>
+          </span>
+          <strong>${money(item.amount)}</strong>
+        </div>`,
+            )
+            .join("")
+        : `<p class="empty-state">Every spending category currently has a monthly limit.</p>`
+    }`;
 }
 
 function renderBudgets(budgets) {
@@ -400,6 +484,7 @@ async function loadDashboard({ silent = false } = {}) {
     updateMetrics(summary);
     renderCashflowChart(summary.monthly || []);
     renderCategoryChart(summary.category_breakdown || []);
+    renderCategoryInsights(summary.category_breakdown || [], summary.budgets || []);
     renderBudgets(summary.budgets || []);
     renderTransactions(transactionPayload.transactions || []);
     renderDatabaseStatus(databasePayload.database || {});

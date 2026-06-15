@@ -168,9 +168,27 @@
       </div>
     </div>
     <p class="sr-only" id="category-summary-text">Category chart is loading.</p>
-    <div class="chart-wrap chart-wrap-small">
-      <canvas id="category-chart" aria-describedby="category-summary-text"></canvas>
+    <div class="category-content">
+      <div class="chart-wrap chart-wrap-small">
+        <canvas id="category-chart" aria-describedby="category-summary-text"></canvas>
+      </div>
+      <aside class="category-insights" aria-labelledby="category-insights-title">
+        <div class="category-readout">
+          <div>
+            <span>Total spending</span>
+            <strong id="category-total">$0.00</strong>
+          </div>
+          <div>
+            <span>Top category</span>
+            <strong id="category-top">None yet</strong>
+          </div>
+        </div>
+        <h3 id="category-insights-title">Top spending</h3>
+        <p id="category-insights-summary">Spending insights are loading.</p>
+        <div id="category-insights-list" class="category-insight-list" aria-live="polite"></div>
+      </aside>
     </div>
+    <div id="category-budget-gaps" class="category-gap-panel" aria-live="polite"></div>
   </section>
 
   <section class="planner-section table-panel wide-panel" aria-labelledby="transactions-title">
