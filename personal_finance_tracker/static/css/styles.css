@@ -505,7 +505,7 @@ h3 {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: clamp(1.4rem, 2.4vw, 2.2rem);
-  align-items: start;
+  align-items: stretch;
   padding: clamp(2.2rem, 4.6vw, 4rem) 0 64px;
 }
 
@@ -716,6 +716,7 @@ textarea:hover {
 .chart-panel {
   display: flex;
   flex-direction: column;
+  min-height: 100%;
 }
 
 .chart-wrap {
