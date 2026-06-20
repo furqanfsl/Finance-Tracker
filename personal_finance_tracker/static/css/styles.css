@@ -505,13 +505,25 @@ h3 {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: clamp(1.4rem, 2.4vw, 2.2rem);
+  align-items: start;
   padding: clamp(2.2rem, 4.6vw, 4rem) 0 64px;
 }
 
 .planner-section {
+  position: relative;
   min-width: 0;
   padding-top: 24px;
   border-top: 1px solid var(--color-line-strong);
+}
+
+.planner-section::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 64px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-red), var(--color-blue), var(--color-pink));
 }
 
 .section-heading {
@@ -534,6 +546,8 @@ h3 {
 
 .budget-panel {
   grid-column: span 5;
+  display: flex;
+  flex-direction: column;
 }
 
 .category-panel {
@@ -731,17 +745,17 @@ textarea:hover {
 
 .category-content {
   display: grid;
-  grid-template-columns: minmax(230px, 0.9fr) minmax(245px, 1fr);
-  gap: clamp(0.9rem, 1.9vw, 1.5rem);
-  align-items: start;
+  grid-template-columns: minmax(220px, 0.78fr) minmax(285px, 1fr);
+  gap: clamp(1.15rem, 2.1vw, 2rem);
+  align-items: center;
 }
 
 .category-panel .chart-wrap-small {
-  min-height: 280px;
+  min-height: 260px;
 }
 
 .category-panel .chart-wrap-small canvas {
-  height: 280px !important;
+  height: 260px !important;
 }
 
 .category-insights {
@@ -760,7 +774,7 @@ textarea:hover {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  padding: 11px 0;
+  padding: 9px 0;
 }
 
 .category-readout div > * {
@@ -792,12 +806,12 @@ textarea:hover {
 }
 
 .category-insights h3,
-.category-gap-panel h3 {
+.budget-suggestion-panel h3 {
   margin: 12px 0 0;
 }
 
 .category-insights > p {
-  margin: 6px 0 2px;
+  margin: 6px 0 0;
   color: var(--color-ink-soft);
   line-height: 1.45;
 }
@@ -808,7 +822,7 @@ textarea:hover {
 }
 
 .category-insight-row {
-  padding: 10px 0 11px;
+  padding: 9px 0 10px;
   border-top: 1px solid var(--color-line);
 }
 
@@ -830,9 +844,9 @@ textarea:hover {
 }
 
 .category-share-track {
-  height: 8px;
+  height: 7px;
   overflow: hidden;
-  margin-top: 8px;
+  margin-top: 7px;
   border-radius: 999px;
   background: rgba(21, 23, 36, 0.08);
 }
@@ -854,17 +868,16 @@ textarea:hover {
   line-height: 1.35;
 }
 
-.category-gap-panel {
-  margin-top: 12px;
-  padding: 12px 0;
+.budget-suggestion-panel {
+  margin-top: 8px;
+  padding: 14px 0 0;
   border-top: 1px solid var(--color-line-strong);
-  border-bottom: 1px solid var(--color-line);
 }
 
 .category-gap-heading {
   display: grid;
   gap: 4px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .category-gap-heading h3 {
@@ -873,39 +886,74 @@ textarea:hover {
 }
 
 .category-gap-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 14px;
+  display: grid;
+  gap: 0;
 }
 
 .category-gap-row {
-  display: inline-flex;
-  padding-right: 14px;
-  border-right: 1px solid var(--color-line);
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-top: 1px solid var(--color-line);
+  background: transparent;
+  color: inherit;
+  padding: 10px 0;
+  text-align: left;
+  transition: color var(--transition-fluid), transform var(--transition-fluid);
 }
 
 .category-gap-row:last-child {
-  padding-right: 0;
-  border-right: 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.category-gap-row:hover {
+  color: var(--color-blue-deep);
+  transform: translateX(2px);
+}
+
+.category-gap-row:active {
+  transform: translateX(0);
 }
 
 .category-gap-row em {
-  color: var(--color-muted);
+  color: var(--color-blue-deep);
   font-family: var(--font-mono);
   font-size: 0.88rem;
   font-style: normal;
   font-variant-numeric: tabular-nums;
-  font-weight: 750;
+  font-weight: 850;
+}
+
+.category-gap-row em::after {
+  content: " use";
+  color: var(--color-muted);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .budget-form {
-  align-items: flex-start;
-  margin-bottom: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+  align-items: start;
+  margin-bottom: 10px;
+}
+
+.budget-form > .form-field {
+  margin-bottom: 0;
 }
 
 .budget-form .button {
-  flex: 0 0 146px;
-  margin-top: 27px;
+  grid-column: 1 / -1;
+  width: 100%;
+  flex: initial;
+  margin-top: 0;
 }
 
 .budget-list {
@@ -913,9 +961,14 @@ textarea:hover {
   grid-template-columns: 1fr;
 }
 
+.budget-list > .empty-state {
+  padding: 12px 0 10px;
+}
+
 .budget-item {
-  padding: 14px 0;
+  padding: 12px 0;
   border-top: 1px solid var(--color-line);
+  transition: opacity var(--transition-fluid), transform var(--transition-fluid);
 }
 
 .budget-item:last-child {
@@ -944,7 +997,7 @@ textarea:hover {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 8px;
+  margin-top: 7px;
 }
 
 .progress-track {
@@ -979,6 +1032,12 @@ textarea:hover {
   justify-content: flex-end;
 }
 
+.filter-actions {
+  display: inline-flex;
+  align-items: end;
+  gap: 10px;
+}
+
 .filter-kind-field {
   min-width: 248px;
   margin: 0;
@@ -1007,6 +1066,14 @@ textarea:hover {
 
 .filter-form input {
   min-height: 42px;
+}
+
+.filter-actions .button {
+  min-height: 42px;
+}
+
+.filter-actions .button-text {
+  padding-inline: 0.35rem;
 }
 
 .table-wrap {
@@ -1051,7 +1118,10 @@ th {
 }
 
 tbody tr {
-  transition: background var(--transition-fluid);
+  transition:
+    background var(--transition-fluid),
+    opacity var(--transition-fluid),
+    transform var(--transition-fluid);
 }
 
 tbody tr:hover {
@@ -1060,6 +1130,12 @@ tbody tr:hover {
 
 tbody tr:last-child td {
   border-bottom: 0;
+}
+
+tbody tr.row-removing,
+.budget-item.row-removing {
+  opacity: 0.35;
+  transform: translateX(8px);
 }
 
 .amount-cell {
@@ -1214,9 +1290,16 @@ tbody tr:last-child td {
   .filter-form,
   .filter-kind-field,
   .filter-kind-group,
+  .filter-actions,
   .filter-form label,
   .filter-form .button {
     width: 100%;
+  }
+
+  .filter-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .topnav {
@@ -1303,6 +1386,10 @@ tbody tr:last-child td {
   .budget-form .button {
     flex-basis: auto;
     margin-top: 0;
+  }
+
+  .budget-form {
+    grid-template-columns: 1fr;
   }
 
   .chart-wrap,

@@ -8,6 +8,7 @@ const state = {
   categories: { income: [], expense: [] },
   databaseFingerprint: null,
   loading: false,
+  pendingReload: null,
   filterDebounce: null,
   pollTimer: null,
 };
@@ -43,6 +44,7 @@ const selectors = {
   categoryBudgetGaps: document.querySelector("#category-budget-gaps"),
   saveButton: document.querySelector("#save-transaction-button"),
   saveBudgetButton: document.querySelector("#save-budget-button"),
+  budgetLimitInput: document.querySelector("#budget-limit"),
 };
 
 function money(value) {
@@ -307,10 +309,10 @@ function renderCategoryInsights(categories, budgets = []) {
     selectors.categoryInsightsList.innerHTML = `<p class="empty-state">No expense data yet. Add an expense to see the top categories here.</p>`;
     selectors.categoryBudgetGaps.innerHTML = `
       <div class="category-gap-heading">
-        <p class="section-kicker">Next check</p>
-        <h3>Set limits next</h3>
+        <p class="section-kicker">Limit ideas</p>
+        <h3>Suggested limits</h3>
       </div>
-      <p class="empty-state">Budget gaps will appear after you add expenses.</p>`;
+      <p class="empty-state">Add an expense to get limit suggestions.</p>`;
     return;
   }
 
@@ -343,27 +345,39 @@ function renderCategoryInsights(categories, budgets = []) {
 
   selectors.categoryBudgetGaps.innerHTML = `
     <div class="category-gap-heading">
-      <p class="section-kicker">Next check</p>
-      <h3>Set limits next</h3>
+      <p class="section-kicker">Limit ideas</p>
+      <h3>Suggested limits</h3>
     </div>
     ${
       unbudgeted.length
         ? `<div class="category-gap-strip">${unbudgeted
             .map(
-              (item) => `
-        <span class="category-gap-row">
-          <strong>${escapeHtml(item.category)}</strong>
-          <em>${money(item.amount)}</em>
-        </span>`,
+              (item) => {
+                const amount = Number(item.amount || 0);
+                const limit = suggestedBudgetLimit(amount);
+                return `
+        <button class="category-gap-row" type="button" data-suggest-category="${escapeHtml(item.category)}" data-suggest-limit="${limit.toFixed(2)}" aria-label="Use ${escapeHtml(item.category)} as a suggested monthly limit">
+          <span>
+            <strong>${escapeHtml(item.category)}</strong>
+            <small>Current spend ${money(amount)}</small>
+          </span>
+          <em>${money(limit)}</em>
+        </button>`;
+              },
             )
             .join("")}</div>`
-        : `<p class="empty-state">Every spending category currently has a monthly limit.</p>`
+        : `<p class="empty-state">Your spending categories already have monthly limits.</p>`
     }`;
+}
+
+function suggestedBudgetLimit(amount) {
+  const value = Math.max(Number(amount || 0), 1);
+  return Math.ceil((value * 1.05) / 25) * 25;
 }
 
 function renderBudgets(budgets) {
   if (!budgets.length) {
-    selectors.budgetList.innerHTML = `<p class="empty-state">No budgets yet. Add a category limit to start tracking guardrails.</p>`;
+    selectors.budgetList.innerHTML = `<p class="empty-state">No limits yet. Use a suggestion or add your own.</p>`;
     return;
   }
 
@@ -458,7 +472,10 @@ function escapeHtml(value) {
 }
 
 async function loadDashboard({ silent = false } = {}) {
-  if (state.loading) return;
+  if (state.loading) {
+    state.pendingReload = { silent };
+    return;
+  }
 
   const query = buildFilterQuery();
   const suffix = query ? `?${query}` : "";
@@ -494,12 +511,31 @@ async function loadDashboard({ silent = false } = {}) {
     if (!silent) {
       selectors.refreshButton.disabled = false;
     }
+    if (state.pendingReload) {
+      const nextReload = state.pendingReload;
+      state.pendingReload = null;
+      loadDashboard(nextReload);
+    }
   }
 }
 
 function scheduleFilterReload() {
   window.clearTimeout(state.filterDebounce);
   state.filterDebounce = window.setTimeout(() => loadDashboard(), 220);
+}
+
+function handleFilterReset() {
+  window.clearTimeout(state.filterDebounce);
+  window.setTimeout(() => {
+    const allKindOption = selectors.filterForm.querySelector('input[name="kind"][value=""]');
+    if (allKindOption) {
+      allKindOption.checked = true;
+    }
+    selectors.filterForm.querySelectorAll('input[type="date"]').forEach((input) => {
+      input.value = "";
+    });
+    loadDashboard();
+  }, 0);
 }
 
 async function pollForExternalChanges() {
@@ -602,18 +638,24 @@ async function handleTransactionDelete(event) {
   const button = event.target.closest("[data-delete-id]");
   if (!button) return;
 
-  const confirmed = window.confirm("Delete this transaction? This cannot be undone.");
-  if (!confirmed) return;
-
+  const row = button.closest("tr");
   button.disabled = true;
+  button.textContent = "Deleting";
+  button.setAttribute("aria-busy", "true");
+  row?.classList.add("row-removing");
+
   try {
     await apiFetch(`/api/transactions/${button.dataset.deleteId}`, { method: "DELETE" });
+    row?.remove();
     showToast("Transaction deleted.");
-    await loadDashboard();
+    await loadDashboard({ silent: true });
   } catch (error) {
+    row?.classList.remove("row-removing");
     showToast(error.error || "Transaction could not be deleted.");
   } finally {
     button.disabled = false;
+    button.removeAttribute("aria-busy");
+    button.textContent = "Delete";
   }
 }
 
@@ -621,19 +663,35 @@ async function handleBudgetDelete(event) {
   const button = event.target.closest("[data-delete-budget-id]");
   if (!button) return;
 
-  const confirmed = window.confirm("Delete this budget? Transactions will stay in the ledger.");
-  if (!confirmed) return;
-
+  const item = button.closest(".budget-item");
   button.disabled = true;
+  button.textContent = "Removing";
+  button.setAttribute("aria-busy", "true");
+  item?.classList.add("row-removing");
+
   try {
     await apiFetch(`/api/budgets/${button.dataset.deleteBudgetId}`, { method: "DELETE" });
+    item?.remove();
     showToast("Budget deleted.");
-    await loadDashboard();
+    await loadDashboard({ silent: true });
   } catch (error) {
+    item?.classList.remove("row-removing");
     showToast(error.error || "Budget could not be deleted.");
   } finally {
     button.disabled = false;
+    button.removeAttribute("aria-busy");
+    button.textContent = "Remove";
   }
+}
+
+function handleBudgetSuggestionClick(event) {
+  const button = event.target.closest("[data-suggest-category]");
+  if (!button) return;
+
+  selectors.budgetCategoryInput.value = button.dataset.suggestCategory || "";
+  selectors.budgetLimitInput.value = button.dataset.suggestLimit || "";
+  selectors.budgetLimitInput.focus({ preventScroll: true });
+  showToast("Suggested limit added.");
 }
 
 function exportCsv() {
@@ -680,14 +738,12 @@ function bindEvents() {
     loadDashboard();
   });
   selectors.filterForm.addEventListener("change", scheduleFilterReload);
-  selectors.clearFiltersButton.addEventListener("click", () => {
-    selectors.filterForm.reset();
-    loadDashboard();
-  });
+  selectors.filterForm.addEventListener("reset", handleFilterReset);
   selectors.refreshButton.addEventListener("click", () => loadDashboard());
   selectors.exportButton.addEventListener("click", exportCsv);
   selectors.transactionRows.addEventListener("click", handleTransactionDelete);
   selectors.budgetList.addEventListener("click", handleBudgetDelete);
+  selectors.categoryBudgetGaps.addEventListener("click", handleBudgetSuggestionClick);
   selectors.form.querySelectorAll('input[name="kind"]').forEach((input) => {
     input.addEventListener("change", populateCategoryOptions);
   });

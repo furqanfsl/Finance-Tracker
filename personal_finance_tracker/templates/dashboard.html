@@ -158,6 +158,7 @@
       <button class="button button-secondary button-full" type="submit" id="save-budget-button">Save budget</button>
     </form>
     <div id="budget-list" class="budget-list" aria-live="polite"></div>
+    <div id="category-budget-gaps" class="budget-suggestion-panel" aria-live="polite"></div>
   </section>
 
   <section class="planner-section category-panel" aria-labelledby="category-title">
@@ -188,7 +189,6 @@
         <div id="category-insights-list" class="category-insight-list" aria-live="polite"></div>
       </aside>
     </div>
-    <div id="category-budget-gaps" class="category-gap-panel" aria-live="polite"></div>
   </section>
 
   <section class="planner-section table-panel wide-panel" aria-labelledby="transactions-title">
@@ -223,8 +223,10 @@
           <span>End</span>
           <input id="filter-end" name="end" type="date">
         </label>
-        <button class="button button-ghost" type="submit">Apply</button>
-        <button class="button button-text" type="button" id="clear-filters-button">Clear</button>
+        <div class="filter-actions">
+          <button class="button button-ghost" type="submit">Apply</button>
+          <button class="button button-text" type="reset" id="clear-filters-button">Clear filters</button>
+        </div>
       </form>
     </div>
 
