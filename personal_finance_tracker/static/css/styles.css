@@ -536,6 +536,14 @@ h3 {
   margin-top: 7px;
 }
 
+.chart-helper {
+  max-width: 40rem;
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
 .form-panel {
   grid-column: span 4;
 }
@@ -581,6 +589,7 @@ form {
 .segmented-control label,
 .filter-kind-group label {
   min-height: 44px;
+  margin: 0;
   position: relative;
   display: flex;
   align-items: center;
@@ -593,6 +602,16 @@ form {
 .segmented-control label + label,
 .filter-kind-group label + label {
   border-left: 1px solid var(--color-line);
+}
+
+.filter-kind-group label {
+  min-height: 40px;
+}
+
+.segmented-control label:has(input:checked),
+.filter-kind-group label:has(input:checked) {
+  background: var(--color-navy);
+  color: #ffffff;
 }
 
 .segmented-control input,
@@ -615,8 +634,8 @@ form {
 
 .segmented-control input:checked + span,
 .filter-kind-group input:checked + span {
-  background: var(--color-navy);
-  color: #ffffff;
+  background: transparent;
+  color: inherit;
 }
 
 .filter-kind-group input:focus-visible + span,

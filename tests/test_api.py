@@ -160,6 +160,18 @@ def test_budget_create_and_progress(client):
     assert budgets[0]["monthly_limit"] == 100.00
 
 
+def test_invalid_budget_returns_field_errors(client):
+    response = client.post("/api/budgets", json={"category": "", "monthly_limit": "0"})
+    payload = response.get_json()
+
+    assert response.status_code == 400
+    assert payload["error"] == "Budget could not be saved."
+    assert payload["field_errors"] == {
+        "category": "Category is required.",
+        "monthly_limit": "Amount must be greater than zero.",
+    }
+
+
 def test_budget_delete(client):
     budget = client.post("/api/budgets", json={"category": "Food", "monthly_limit": "100.00"}).get_json()[
         "budget"

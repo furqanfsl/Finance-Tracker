@@ -266,11 +266,21 @@ def dashboard_summary(filters: dict[str, Any] | None = None) -> dict[str, Any]:
 
 
 def create_or_update_budget(payload: dict[str, Any]) -> Budget:
-    category = normalize_text(payload.get("category"), field="Category", max_length=80)
+    errors: dict[str, str] = {}
+    try:
+        category = normalize_text(payload.get("category"), field="Category", max_length=80)
+    except ValueError as exc:
+        category = ""
+        errors["category"] = str(exc)
+
     try:
         monthly_limit_cents = parse_amount_to_cents(payload.get("monthly_limit"))
     except ValueError as exc:
-        raise ValidationError("Budget could not be saved.", {"monthly_limit": str(exc)}) from None
+        errors["monthly_limit"] = str(exc)
+        monthly_limit_cents = 0
+
+    if errors:
+        raise ValidationError("Budget could not be saved.", errors)
 
     budget = Budget.query.filter(func.lower(Budget.category) == category.lower()).one_or_none()
     if budget is None:

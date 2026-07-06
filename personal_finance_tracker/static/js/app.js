@@ -3,6 +3,8 @@ const currencyCode = config.currency || "USD";
 
 const state = {
   cashflowChart: null,
+  cashflowChartMode: null,
+  cashflowValueLabelsRegistered: false,
   categoryChart: null,
   transactions: [],
   categories: { income: [], expense: [] },
@@ -125,108 +127,278 @@ function categoryPalette(defaults = chartDefaults()) {
   return [defaults.expenses, defaults.income, defaults.net, defaults.ink, "#5c6f9f", "#8f294f", "#7f8290", "#42627d"];
 }
 
+function registerCashflowValueLabels() {
+  if (state.cashflowValueLabelsRegistered || !window.Chart) return;
+
+  window.Chart.register({
+    id: "cashflowValueLabels",
+    beforeDatasetsDraw(chart, _args, options) {
+      if (!options?.enabled) return;
+
+      const { ctx, chartArea, scales } = chart;
+      const meta = chart.getDatasetMeta(0);
+      const zeroX = scales.x?.getPixelForValue(0) || chartArea.left;
+      const trackStart = Math.min(Math.max(zeroX, chartArea.left), chartArea.right);
+      const trackWidth = chartArea.right - trackStart;
+      const trackHeight = 18;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(21, 23, 36, 0.045)";
+      meta.data.forEach((element) => {
+        const { y } = element.tooltipPosition();
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(trackStart, y - trackHeight / 2, trackWidth, trackHeight, trackHeight / 2);
+        } else {
+          ctx.rect(trackStart, y - trackHeight / 2, trackWidth, trackHeight);
+        }
+        ctx.fill();
+      });
+      ctx.restore();
+    },
+    afterDatasetsDraw(chart, _args, options) {
+      if (!options?.enabled) return;
+
+      const { ctx, chartArea, scales } = chart;
+      const zeroX = scales.x?.getPixelForValue(0) || chartArea.left;
+      const labelLeftLimit = 8;
+      const labelRightLimit = chart.width - 8;
+
+      ctx.save();
+      ctx.font = `700 12px ${chartDefaults().font.family}`;
+      ctx.fillStyle = chartDefaults().ink;
+      ctx.textBaseline = "middle";
+
+      chart.data.datasets.forEach((dataset, datasetIndex) => {
+        const meta = chart.getDatasetMeta(datasetIndex);
+        if (meta.hidden) return;
+
+        meta.data.forEach((element, index) => {
+          const value = Number(dataset.data[index] || 0);
+          const text = money(value);
+          const position = element.tooltipPosition();
+          const positive = position.x >= zeroX;
+          const labelWidth = ctx.measureText(text).width;
+          let x = position.x + (positive ? 10 : -10);
+          let align = positive ? "left" : "right";
+
+          if (positive && x + labelWidth > labelRightLimit) {
+            x = Math.max(labelLeftLimit + labelWidth, position.x - 10);
+            align = "right";
+          }
+
+          if (!positive && x - labelWidth < labelLeftLimit) {
+            x = Math.min(labelRightLimit - labelWidth, position.x + 10);
+            align = "left";
+          }
+
+          ctx.textAlign = align;
+          ctx.fillText(text, x, position.y);
+        });
+      });
+
+      ctx.restore();
+    },
+  });
+
+  state.cashflowValueLabelsRegistered = true;
+}
+
+function buildCashflowChartPayload(monthly, defaults = chartDefaults()) {
+  const rows = Array.isArray(monthly) ? monthly : [];
+  const hasData = rows.some(
+    (item) =>
+      Number(item.income || 0) !== 0 || Number(item.expenses || 0) !== 0 || Number(item.net || 0) !== 0,
+  );
+  const mode = rows.length <= 1 ? "snapshot" : "trend";
+  const chartRows = hasData ? rows : [{ month: "No data yet", income: 0, expenses: 0, net: 0 }];
+  const series = [
+    {
+      label: "Income",
+      getValue: (item) => Number(item.income || 0),
+      color: defaults.income,
+      barColor: "rgba(37, 84, 216, 0.88)",
+      areaColor: "rgba(37, 84, 216, 0.08)",
+    },
+    {
+      label: "Expenses",
+      getValue: (item) => Number(item.expenses || 0),
+      color: defaults.expenses,
+      barColor: "rgba(118, 24, 44, 0.88)",
+      areaColor: "rgba(118, 24, 44, 0.08)",
+    },
+    {
+      label: "Net",
+      getValue: (item) => Number(item.net || 0),
+      color: defaults.net,
+      barColor: "rgba(216, 42, 125, 0.84)",
+      areaColor: "rgba(216, 42, 125, 0.08)",
+      borderDash: [7, 6],
+    },
+  ];
+
+  if (mode === "snapshot") {
+    const row = chartRows[0];
+    return {
+      labels: series.map((item) => item.label),
+      datasets: [
+        {
+          type: "bar",
+          label: row.month,
+          data: series.map((item) => item.getValue(row)),
+          borderColor: series.map((item) => item.color),
+          backgroundColor: series.map((item) => item.barColor),
+          hoverBackgroundColor: series.map((item) => item.color),
+          borderWidth: 0,
+          borderRadius: 999,
+          borderSkipped: false,
+          barThickness: 18,
+          maxBarThickness: 22,
+          categoryPercentage: 0.78,
+          barPercentage: 0.86,
+        },
+      ],
+      hasData,
+      mode,
+      monthLabel: row.month,
+    };
+  }
+
+  const labels = chartRows.map((item) => item.month);
+  const datasets = series.map((item) => {
+    return {
+      type: "line",
+      label: item.label,
+      data: chartRows.map((row) => item.getValue(row)),
+      borderColor: item.color,
+      backgroundColor: item.areaColor,
+      borderWidth: 3,
+      pointRadius: 3,
+      pointHoverRadius: 6,
+      pointHitRadius: 14,
+      pointBorderWidth: 2,
+      pointBackgroundColor: defaults.surface,
+      tension: 0.34,
+      borderDash: item.borderDash || [],
+      fill: false,
+    };
+  });
+
+  return { labels, datasets, hasData, mode };
+}
+
+function cashflowChartOptions(defaults, mode, hasData) {
+  const isSnapshot = mode === "snapshot";
+
+  return {
+    animation: false,
+    indexAxis: isSnapshot ? "y" : "x",
+    maintainAspectRatio: false,
+    responsive: true,
+    resizeDelay: 120,
+    interaction: isSnapshot ? { mode: "nearest", intersect: true } : { mode: "index", intersect: false },
+    layout: {
+      padding: isSnapshot ? { top: 8, right: 78, bottom: 6, left: 2 } : { top: 0, right: 0, bottom: 0, left: 0 },
+    },
+    plugins: {
+      legend: {
+        display: !isSnapshot,
+        labels: {
+          usePointStyle: true,
+          boxWidth: 9,
+          boxHeight: 9,
+        },
+      },
+      cashflowValueLabels: {
+        enabled: isSnapshot,
+      },
+      tooltip: {
+        callbacks: {
+          title: (items) => (isSnapshot ? items[0]?.dataset.label || "" : items[0]?.label || ""),
+          label: (context) =>
+            isSnapshot
+              ? `${context.label}: ${money(context.parsed.x)}`
+              : `${context.dataset.label}: ${money(context.parsed.y)}`,
+        },
+      },
+    },
+    scales: {
+      x: {
+        beginAtZero: isSnapshot,
+        border: { display: !isSnapshot },
+        grace: isSnapshot && hasData ? "28%" : undefined,
+        suggestedMax: isSnapshot && !hasData ? 10 : undefined,
+        grid: { color: defaults.grid, display: true },
+        ticks: { maxRotation: 0, autoSkipPadding: 18, maxTicksLimit: isSnapshot ? 5 : undefined, callback: (value) => money(value) },
+      },
+      y: {
+        beginAtZero: !isSnapshot,
+        border: { display: !isSnapshot },
+        grace: !isSnapshot && hasData ? "14%" : 1,
+        suggestedMax: !isSnapshot && !hasData ? 10 : undefined,
+        grid: { color: defaults.grid, display: !isSnapshot },
+        ticks: isSnapshot
+          ? {
+              color: defaults.ink,
+              font: { weight: 800, size: 12 },
+            }
+          : { callback: (value) => money(value) },
+      },
+    },
+  };
+}
+
 function renderCashflowChart(monthly) {
   const summaryText = document.querySelector("#cashflow-summary-text");
+  const contextText = document.querySelector("#cashflow-chart-context");
   if (!window.Chart) {
     summaryText.textContent = "Chart.js could not be loaded, but dashboard data is still available in the table.";
+    if (contextText) contextText.textContent = "Chart could not be loaded.";
     return;
   }
 
-  const labels = monthly.map((item) => item.month);
-  const income = monthly.map((item) => item.income);
-  const expenses = monthly.map((item) => item.expenses);
-  const net = monthly.map((item) => item.net);
   const defaults = chartDefaults();
+  const chartPayload = buildCashflowChartPayload(monthly, defaults);
+  const chartOptions = cashflowChartOptions(defaults, chartPayload.mode, chartPayload.hasData);
 
+  registerCashflowValueLabels();
   window.Chart.defaults.color = defaults.color;
   window.Chart.defaults.font.family = defaults.font.family;
 
+  if (state.cashflowChart && state.cashflowChartMode !== chartPayload.mode) {
+    state.cashflowChart.destroy();
+    state.cashflowChart = null;
+  }
+
   if (state.cashflowChart) {
-    state.cashflowChart.data.labels = labels;
-    state.cashflowChart.data.datasets[0].data = income;
-    state.cashflowChart.data.datasets[1].data = expenses;
-    state.cashflowChart.data.datasets[2].data = net;
-    state.cashflowChart.data.datasets[0].borderColor = defaults.income;
-    state.cashflowChart.data.datasets[1].borderColor = defaults.expenses;
-    state.cashflowChart.data.datasets[2].borderColor = defaults.net;
-    state.cashflowChart.options.scales.x.grid.color = defaults.grid;
-    state.cashflowChart.options.scales.y.grid.color = defaults.grid;
+    state.cashflowChart.data.labels = chartPayload.labels;
+    state.cashflowChart.data.datasets = chartPayload.datasets;
+    state.cashflowChart.options = chartOptions;
     state.cashflowChart.update("none");
   } else {
     state.cashflowChart = new window.Chart(document.querySelector("#cashflow-chart"), {
-      type: "line",
+      type: chartPayload.mode === "snapshot" ? "bar" : "line",
       data: {
-        labels,
-        datasets: [
-          {
-            label: "Income",
-            data: income,
-            borderColor: defaults.income,
-            backgroundColor: "rgba(37, 84, 216, 0.08)",
-            borderWidth: 3,
-            pointRadius: 3,
-            pointHoverRadius: 6,
-            tension: 0.34,
-            fill: false,
-          },
-          {
-            label: "Expenses",
-            data: expenses,
-            borderColor: defaults.expenses,
-            backgroundColor: "rgba(118, 24, 44, 0.08)",
-            borderWidth: 3,
-            pointRadius: 3,
-            pointHoverRadius: 6,
-            tension: 0.34,
-            fill: false,
-          },
-          {
-            label: "Net",
-            data: net,
-            borderColor: defaults.net,
-            backgroundColor: "rgba(216, 42, 125, 0.08)",
-            borderWidth: 3,
-            pointRadius: 3,
-            pointHoverRadius: 6,
-            borderDash: [7, 6],
-            tension: 0.34,
-            fill: false,
-          },
-        ],
+        labels: chartPayload.labels,
+        datasets: chartPayload.datasets,
       },
-      options: {
-        animation: false,
-        maintainAspectRatio: false,
-        responsive: true,
-        resizeDelay: 120,
-        interaction: { mode: "index", intersect: false },
-        plugins: {
-          legend: { labels: { usePointStyle: true, boxWidth: 9, boxHeight: 9 } },
-          tooltip: {
-            callbacks: {
-              label: (context) => `${context.dataset.label}: ${money(context.parsed.y)}`,
-            },
-          },
-        },
-        scales: {
-          x: {
-            grid: { color: defaults.grid },
-            ticks: { maxRotation: 0, autoSkipPadding: 18 },
-          },
-          y: {
-            beginAtZero: true,
-            grid: { color: defaults.grid },
-            ticks: { callback: (value) => money(value) },
-          },
-        },
-      },
+      options: chartOptions,
     });
   }
 
+  state.cashflowChartMode = chartPayload.mode;
+
   const latest = monthly.at(-1);
   summaryText.textContent = latest
-    ? `Latest month ${latest.month}: income ${money(latest.income)}, expenses ${money(latest.expenses)}, net ${money(latest.net)}.`
+    ? `${chartPayload.mode === "snapshot" ? "Snapshot view" : "Trend view"}. Latest month ${latest.month}: income ${money(latest.income)}, expenses ${money(latest.expenses)}, net ${money(latest.net)}.`
     : "No monthly cashflow data yet.";
+  if (contextText) {
+    contextText.textContent = latest
+      ? chartPayload.mode === "snapshot"
+        ? `${latest.month} snapshot with direct value labels.`
+        : `${monthly[0].month} to ${latest.month} trend.`
+      : "Add a transaction to start the cashflow view.";
+  }
 }
 
 function renderCategoryChart(categories) {
