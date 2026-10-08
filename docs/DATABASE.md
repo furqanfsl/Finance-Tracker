@@ -1,6 +1,7 @@
 # Database workflow
 
-The app uses SQLite through Flask-SQLAlchemy. The active local database is created automatically at:
+The app uses SQLite through Flask-SQLAlchemy. With the default configuration,
+the app creates this file in the project root:
 
 ```text
 financial.db
@@ -24,11 +25,16 @@ For a clean database with the demo transactions and budgets:
 .\scripts\open_database.ps1
 ```
 
-If DB Browser is already open and empty, choose **Open Database** and select:
+If DB Browser is already open and empty, choose **Open Database** and select
+the path printed by:
 
-```text
-D:\First_Project\financial.db
+```powershell
+uv run flask --app run.py db-path
 ```
+
+This also works when `DATABASE_URL` points to a different file. Relative SQLite
+URLs, including the one in `.env.example`, resolve under Flask's `instance/`
+directory.
 
 DB Browser for SQLite is not a database server; it is an editor for the same
 SQLite file that Flask reads and writes. If you edit rows in DB Browser, click
